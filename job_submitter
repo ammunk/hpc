@@ -1,0 +1,85 @@
+#!/usr/bin/bash
+
+# For SLURM see: https://docs.computecanada.ca/wiki/Using_GPUs_with_Slurm and https://docs.computecanada.ca/wiki/Running_jobs
+# For PBS see: https://hpcc.usc.edu/support/documentation/running-a-job-on-the-hpcc-cluster-using-pbs/
+# Comparing commands see: https://hpcc.usc.edu/support/documentation/pbs-to-slurm/
+
+# THIS SCRIPT ALLOWS ONLY THE USE OF A SINGLE NODE!
+
+# For SLURM: each submission is considered a SINGLE task (UNLESS WE USE MPI)
+
+# IF USING MPI WITH SEVERAL "TASKS" - I.E. USING SEVERAL NODES: USE DIFFERENT SCRIPT
+
+# Directory where this script is called
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+SCHEDULER="PBS"
+
+NAME="TEST"
+
+# PBS specific arguments
+NODES="berkeley"
+QUEUE="gpu"
+
+# general settings
+CPUS_PER_TASK=1 # should be no more than 6 per GPU! -- SEE COMPUTE CANADA
+MEM="5G" # G/M is Gigabyte/Megabyte
+TIME="01:00:00" # <HH:MM:MM>
+GPUS=1
+
+# container arguments
+CONTAINER_TYPE="docker" # (docker/singularity)
+CONTAINER_NAME="raven"
+
+# number of times to submit
+N=1
+
+# command send to container
+CMD=""
+
+# experimental environment variables (BELOW IS AN EXAMPLE WHERE THE EXPERIMENT IS CALLED RAVEN)
+
+EXP_NAME="MAGNITUDE"
+
+# set base directory names to store results from jobs (specific directory will be given in the job script)
+if ! [ -z ${SCRATCH+x} ]; then
+    if [ -d ${SCRATCH}/amunk_docker ]; then # we are on local hpc
+        BASERESULTSDIR="${SCRATCH}/amunk_docker/simulator_compilation/experiments/${EXP_NAME}"
+    else # we are on compute canada
+        BASERESULTSDIR="${SCRATCH}/simulator_compilation/experiments/${EXP_NAME}"
+    fi
+else
+    exit 1
+fi
+
+RESULTSDIR_CONTAINER="/home/root/Starburst/results"
+
+VARIABLES="CMD=${CMD},CONTAINER=${CONTAINER_NAME},BASERESULTSDIR=${BASERESULTSDIR},RESULTSDIR_CONTAINER=${RESULTSDIR_CONTAINER}"
+
+# SUBMIT JOBS
+
+for n in {1.."$N"}
+do
+    # specify results directory ID (so that each job can mount its own folder)
+    if [[ "$SCHEDULER" = "PBS" ]]; then
+        qsub -N "$NAME" \
+             -q "$QUEUE" \
+             -l "nodes=${NODES}:ppn=${CPUS_PER_TASK}:gpus=${GPUS}:mem=${MEM}:walltime=${TIME}" \
+             -o "${DIR}/hpc_output/${NAME}/%j.out" \
+             -e "${DIR}/hpc_output/${NAME}/%j.err" \
+             -v "$VARIABLES" \
+             "plai_${CONTAINER}_job.sh"
+    elif [[ "$SCHEDULER" = "SLURM" ]]; then
+        # COMPUTE CANADA ONLY SUPPORTS SINGULARITY
+        sbatch "--job_name=${NAME}" \
+               "--time=${TIME}" \
+               "--cpus-per-task=${CPUS_PER_TASK}" \
+               "--mem=${MEM}" \
+               "--gres=gpu:${GPUS}" \
+               -o "${DIR}/hpc_output/${NAME}/%j.out" \
+               -e "${DIR}/hpc_output/${NAME}/%j.err" \
+               "--export=ALL,${VARIABLES}" \
+               "cc_singularity_job.sh"
+    fi
+    sleep 1 # sleep so that we do not overwhelm the scheduler (SEE e.g. compute canada's website)
+done
