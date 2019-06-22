@@ -13,9 +13,10 @@
 # Directory where this script is called
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-SCHEDULER="PBS"
+# project name
+PROJECT_NAME="PN"
 
-NAME="TEST"
+SCHEDULER="PBS"
 
 # PBS specific arguments
 NODES="berkeley"
@@ -39,20 +40,24 @@ CMD=""
 
 # experimental environment variables (BELOW IS AN EXAMPLE WHERE THE EXPERIMENT IS CALLED RAVEN)
 
-EXP_NAME="MAGNITUDE"
+EXP_NAME="TEST"
 
 # set base directory names to store results from jobs (specific directory will be given in the job script)
-if ! [ -z ${SCRATCH+x} ]; then
+if [ ! -z ${SCRATCH+x} ]; then
     if [ -d ${SCRATCH}/amunk_docker ]; then # we are on local hpc
-        BASERESULTSDIR="${SCRATCH}/amunk_docker/simulator_compilation/experiments/${EXP_NAME}"
+        BASERESULTSDIR="${SCRATCH}/amunk_docker/${PROJECT_NAME}/experiments"
     else # we are on compute canada
-        BASERESULTSDIR="${SCRATCH}/simulator_compilation/experiments/${EXP_NAME}"
+        BASERESULTSDIR="${SCRATCH}/${PROJECT_NAME}/experiments"
     fi
 else
     exit 1
 fi
 
-RESULTSDIR_CONTAINER="/home/root/Starburst/results"
+if [ ! -d "$BASERESULTSDIR" ]; then
+    mkdir "$BASERESULTSDIR"
+done
+
+RESULTSDIR_CONTAINER="/results"
 
 VARIABLES="CMD=${CMD},CONTAINER=${CONTAINER_NAME},BASERESULTSDIR=${BASERESULTSDIR},RESULTSDIR_CONTAINER=${RESULTSDIR_CONTAINER}"
 
@@ -62,23 +67,23 @@ for n in {1.."$N"}
 do
     # specify results directory ID (so that each job can mount its own folder)
     if [[ "$SCHEDULER" = "PBS" ]]; then
-        qsub -N "$NAME" \
+        qsub -N "$EXP_NAME" \
              -q "$QUEUE" \
              -l "nodes=${NODES}:ppn=${CPUS_PER_TASK}:gpus=${GPUS}:mem=${MEM}:walltime=${TIME}" \
              -o "${DIR}/hpc_output/${NAME}/%j.out" \
              -e "${DIR}/hpc_output/${NAME}/%j.err" \
-             -v "$VARIABLES" \
+             -v "$VARIABLES,EXP_NAME=${EXP_NAME}" \
              "plai_${CONTAINER}_job.sh"
     elif [[ "$SCHEDULER" = "SLURM" ]]; then
         # COMPUTE CANADA ONLY SUPPORTS SINGULARITY
-        sbatch "--job_name=${NAME}" \
+        sbatch "--job_name=${EXP_NAME}" \
                "--time=${TIME}" \
                "--cpus-per-task=${CPUS_PER_TASK}" \
                "--mem=${MEM}" \
                "--gres=gpu:${GPUS}" \
                -o "${DIR}/hpc_output/${NAME}/%j.out" \
                -e "${DIR}/hpc_output/${NAME}/%j.err" \
-               "--export=ALL,${VARIABLES}" \
+               "--export=ALL,${VARIABLES},EXP_NAME=${EXP_NAME}" \
                "cc_singularity_job.sh"
     fi
     sleep 1 # sleep so that we do not overwhelm the scheduler (SEE e.g. compute canada's website)

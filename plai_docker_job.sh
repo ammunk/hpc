@@ -5,7 +5,7 @@
 #   - RESULTSDIR
 #   - RESULTSDIR_CONTAINER
 
-LOCAL="${RESULTSDIR}_${PBS_JOBID}"
+LOCAL="${RESULTSDIR}/${EXP_NAME}_${PBS_JOBID}"
 MOUNT="${RESULTSDIR_CONTAINER}"
 
 if [ ! -d "$LOCAL" ]; then
@@ -14,5 +14,6 @@ fi
 
 docker run --runtime=nvidia --rm \
        -v "${LOCAL}:${MOUNT}" \
+       --name "${EXP_NAME}_${PBS_JOBID}" \
        "$CONTAINER" \
        "$CMD"
