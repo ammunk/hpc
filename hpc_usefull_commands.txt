@@ -1,4 +1,0 @@
-"nodestat hpc" which shows nodes (computers) and available cores for each node.
-"checkjob #", where # should be replaced by process number
-"showstart !$"
-"showclass hpc | less"
