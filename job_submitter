@@ -75,7 +75,7 @@ do
              -o "${DIR}/hpc_output/${NAME}/%j.out" \
              -e "${DIR}/hpc_output/${NAME}/%j.err" \
              -v "$VARIABLES,EXP_NAME=${EXP_NAME},EXP_DIR=${EXP_DIR},USE_MONGO=${USE_MONGO}" \
-             "plai_${CONTAINER}_job.sh"
+             "~/hpc/plai_${CONTAINER}_job.sh"
     elif [[ "$SCHEDULER" = "SLURM" ]]; then
         # COMPUTE CANADA ONLY SUPPORTS SINGULARITY
         # COMPUTE CANADA should NEVER use mongoDB (at least not yet!)
@@ -87,7 +87,7 @@ do
                -o "${DIR}/hpc_output/${NAME}/%j.out" \
                -e "${DIR}/hpc_output/${NAME}/%j.err" \
                "--export=ALL,${VARIABLES},EXP_NAME=${EXP_NAME},EXP_DIR=${EXP_DIR},USE_MONGO=FALSE" \
-               "cc_singularity_job.sh"
+               "~/hpc/cc_singularity_job.sh"
     fi
     sleep 1 # sleep so that we do not overwhelm the scheduler (SEE e.g. compute canada's website)
 done
