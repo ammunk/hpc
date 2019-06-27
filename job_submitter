@@ -42,7 +42,7 @@ CMD=""
 
 EXP_NAME="TEST"
 USE_MONGO="FALSE"
-EXP_DIR="$(dirname "$DIR")" # get parent directory from where this script is called
+EXP_DIR="$(dirname "$DIR")" # get parent directory from where this script is called (assumes submitted from exp_dir/hpc_scripts)
 
 # set base directory names to store results from jobs (specific directory will be given in the job script)
 if [ ! -z ${SCRATCH+x} ]; then
