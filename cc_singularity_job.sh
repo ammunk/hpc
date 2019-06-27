@@ -7,8 +7,9 @@
 #   - BASERESULTSDIR
 #   - RESULTSDIR_CONTAINER
 
-module load singularity/3.1
-module load CUDA
+cd $EXP_DIR
+
+module load singularity
 
 LOCAL="${BASERESULTSDIR}/${EXP_NAME}_${SLURM_JOB_ID}"
 MOUNT="${RESULTSDIR_CONTAINER}"

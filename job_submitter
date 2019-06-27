@@ -41,6 +41,8 @@ CMD=""
 # experimental environment variables (BELOW IS AN EXAMPLE WHERE THE EXPERIMENT IS CALLED RAVEN)
 
 EXP_NAME="TEST"
+USE_MONGO="FALSE"
+EXP_DIR="$(dirname "$DIR")" # get parent directory from where this script is called
 
 # set base directory names to store results from jobs (specific directory will be given in the job script)
 if [ ! -z ${SCRATCH+x} ]; then
@@ -55,7 +57,7 @@ fi
 
 if [ ! -d "$BASERESULTSDIR" ]; then
     mkdir "$BASERESULTSDIR"
-done
+fi
 
 RESULTSDIR_CONTAINER="/results"
 
@@ -72,10 +74,11 @@ do
              -l "nodes=${NODES}:ppn=${CPUS_PER_TASK}:gpus=${GPUS}:mem=${MEM}:walltime=${TIME}" \
              -o "${DIR}/hpc_output/${NAME}/%j.out" \
              -e "${DIR}/hpc_output/${NAME}/%j.err" \
-             -v "$VARIABLES,EXP_NAME=${EXP_NAME}" \
+             -v "$VARIABLES,EXP_NAME=${EXP_NAME},EXP_DIR=${EXP_DIR},USE_MONGO=${USE_MONGO}" \
              "plai_${CONTAINER}_job.sh"
     elif [[ "$SCHEDULER" = "SLURM" ]]; then
         # COMPUTE CANADA ONLY SUPPORTS SINGULARITY
+        # COMPUTE CANADA should NEVER use mongoDB (at least not yet!)
         sbatch "--job_name=${EXP_NAME}" \
                "--time=${TIME}" \
                "--cpus-per-task=${CPUS_PER_TASK}" \
@@ -83,7 +86,7 @@ do
                "--gres=gpu:${GPUS}" \
                -o "${DIR}/hpc_output/${NAME}/%j.out" \
                -e "${DIR}/hpc_output/${NAME}/%j.err" \
-               "--export=ALL,${VARIABLES},EXP_NAME=${EXP_NAME}" \
+               "--export=ALL,${VARIABLES},EXP_NAME=${EXP_NAME},EXP_DIR=${EXP_DIR},USE_MONGO=FALSE" \
                "cc_singularity_job.sh"
     fi
     sleep 1 # sleep so that we do not overwhelm the scheduler (SEE e.g. compute canada's website)
