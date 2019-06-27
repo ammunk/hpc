@@ -47,9 +47,9 @@ EXP_DIR="$(dirname "$DIR")" # get parent directory from where this script is cal
 # set base directory names to store results from jobs (specific directory will be given in the job script)
 if [ ! -z ${SCRATCH+x} ]; then
     if [ -d ${SCRATCH}/amunk_docker ]; then # we are on local hpc
-        BASERESULTSDIR="${SCRATCH}/amunk_docker/${PROJECT_NAME}/experiments"
+        BASERESULTSDIR="${SCRATCH}/amunk_docker/${PROJECT_NAME}"
     else # we are on compute canada
-        BASERESULTSDIR="${SCRATCH}/${PROJECT_NAME}/experiments"
+        BASERESULTSDIR="${SCRATCH}/${PROJECT_NAME}"
     fi
 else
     exit 1
