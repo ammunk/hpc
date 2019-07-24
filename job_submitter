@@ -13,6 +13,11 @@
 # Directory where this script is called
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
+# create hpc_output directory if it does not exist
+if [ ! -d "${DIR}/hpc_output" ]; then
+    mkdir "${DIR}/hpc_output"
+fi
+
 # project name
 PROJECT_NAME="PN"
 
