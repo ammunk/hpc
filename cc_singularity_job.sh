@@ -9,7 +9,7 @@
 #   - BASERESULTSDIR
 #   - RESULTSDIR_CONTAINER
 
-module load singularity cuda/10
+module load singularity/3.2 cuda/10
 
 LOCAL="${BASERESULTSDIR}/${EXP_NAME}_${SLURM_JOB_ID}"
 MOUNT="${RESULTSDIR_CONTAINER}"

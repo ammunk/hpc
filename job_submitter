@@ -79,8 +79,8 @@ do
         qsub -N "$EXP_NAME" \
              -q "$QUEUE" \
              -l "nodes=${NODES}:ppn=${CPUS_PER_TASK}:gpus=${GPUS}:mem=${MEM}:walltime=${TIME}" \
-             -o "${DIR}/hpc_output/${NAME}/%j.out" \
-             -e "${DIR}/hpc_output/${NAME}/%j.err" \
+             -o "${DIR}/hpc_output/${EXP_NAME}_%j.out" \
+             -e "${DIR}/hpc_output/${EXP_NAME}_%j.err" \
              -v "$VARIABLES,EXP_NAME=${EXP_NAME},EXP_DIR=${EXP_DIR},USE_MONGO=${USE_MONGO}" \
              -D "$EXP_DIR" \
              "~/hpc/plai_${CONTAINER}_job.sh"
@@ -93,8 +93,8 @@ do
                "--mem=${MEM}" \
                "--gres=gpu:${GPUS}" \
                --chdir="$EXP_DIR" \
-               -o "${DIR}/hpc_output/${NAME}/%j.out" \
-               -e "${DIR}/hpc_output/${NAME}/%j.err" \
+               -o "${DIR}/hpc_output/${EXP_NAME}_%j.out" \
+               -e "${DIR}/hpc_output/${EXP_NAME}_%j.err" \
                "--export=ALL,${VARIABLES},EXP_NAME=${EXP_NAME},EXP_DIR=${EXP_DIR},USE_MONGO=FALSE" \
                ~/hpc/cc_singularity_job.sh
     fi
