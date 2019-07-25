@@ -1,3 +1,5 @@
+#!/bin/bash
+
 #SBATCH --account=rrg-kevinlb
 
 # THIS SCRIPT IS CALLED OUTSIDE USING "sbatch"

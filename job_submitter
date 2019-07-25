@@ -21,7 +21,7 @@ fi
 # project name
 PROJECT_NAME="PN"
 
-SCHEDULER="PBS"
+SCHEDULER="PBS" # SLURM/PBS
 
 # PBS specific arguments
 NODES="berkeley"
@@ -34,7 +34,7 @@ TIME="01:00:00" # <HH:MM:MM>
 GPUS=1
 
 # container arguments
-CONTAINER_TYPE="docker" # (docker/singularity)
+CONTAINER_TYPE="docker" # docker/singularity
 CONTAINER_NAME="raven"
 
 # number of times to submit
@@ -61,7 +61,7 @@ else
 fi
 
 if [ ! -d "$BASERESULTSDIR" ]; then
-    mkdir "$BASERESULTSDIR"
+    mkdir -p "$BASERESULTSDIR"
 fi
 
 RESULTSDIR_CONTAINER="/results"
@@ -80,6 +80,7 @@ do
              -o "${DIR}/hpc_output/${NAME}/%j.out" \
              -e "${DIR}/hpc_output/${NAME}/%j.err" \
              -v "$VARIABLES,EXP_NAME=${EXP_NAME},EXP_DIR=${EXP_DIR},USE_MONGO=${USE_MONGO}" \
+             -D "$BASERESULTSDIR" \
              "~/hpc/plai_${CONTAINER}_job.sh"
     elif [[ "$SCHEDULER" = "SLURM" ]]; then
         # COMPUTE CANADA ONLY SUPPORTS SINGULARITY
@@ -89,10 +90,11 @@ do
                "--cpus-per-task=${CPUS_PER_TASK}" \
                "--mem=${MEM}" \
                "--gres=gpu:${GPUS}" \
+               --chdir "$BASERESULTSDIR" \
                -o "${DIR}/hpc_output/${NAME}/%j.out" \
                -e "${DIR}/hpc_output/${NAME}/%j.err" \
                "--export=ALL,${VARIABLES},EXP_NAME=${EXP_NAME},EXP_DIR=${EXP_DIR},USE_MONGO=FALSE" \
-               "~/hpc/cc_singularity_job.sh"
+               ~/hpc/cc_singularity_job.sh
     fi
     sleep 1 # sleep so that we do not overwhelm the scheduler (SEE e.g. compute canada's website)
 done
