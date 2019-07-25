@@ -66,9 +66,9 @@ fi
 
 RESULTSDIR_CONTAINER="/results"
 
-OVERLAYDIR="/"
+OVERLAYDIR_CONTAINER="/"
 
-VARIABLES="CMD=${CMD},OVERLAYDIR=${OVERLAYDIR},CONTAINER=${CONTAINER_NAME},BASERESULTSDIR=${BASERESULTSDIR},RESULTSDIR_CONTAINER=${RESULTSDIR_CONTAINER}"
+VARIABLES="CMD=${CMD},OVERLAYDIR_CONTAINER=${OVERLAYDIR_CONTAINER},CONTAINER=${CONTAINER_NAME},BASERESULTSDIR=${BASERESULTSDIR},RESULTSDIR_CONTAINER=${RESULTSDIR_CONTAINER}"
 
 # SUBMIT JOBS
 
@@ -82,7 +82,7 @@ do
              -o "${DIR}/hpc_output/${NAME}/%j.out" \
              -e "${DIR}/hpc_output/${NAME}/%j.err" \
              -v "$VARIABLES,EXP_NAME=${EXP_NAME},EXP_DIR=${EXP_DIR},USE_MONGO=${USE_MONGO}" \
-             -D "$BASERESULTSDIR" \
+             -D "$EXP_DIR" \
              "~/hpc/plai_${CONTAINER}_job.sh"
     elif [[ "$SCHEDULER" = "SLURM" ]]; then
         # COMPUTE CANADA ONLY SUPPORTS SINGULARITY
@@ -92,7 +92,7 @@ do
                "--cpus-per-task=${CPUS_PER_TASK}" \
                "--mem=${MEM}" \
                "--gres=gpu:${GPUS}" \
-               --chdir "$BASERESULTSDIR" \
+               --chdir="$EXP_DIR" \
                -o "${DIR}/hpc_output/${NAME}/%j.out" \
                -e "${DIR}/hpc_output/${NAME}/%j.err" \
                "--export=ALL,${VARIABLES},EXP_NAME=${EXP_NAME},EXP_DIR=${EXP_DIR},USE_MONGO=FALSE" \
