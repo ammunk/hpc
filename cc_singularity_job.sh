@@ -11,10 +11,11 @@
 
 cd $EXP_DIR
 
-module load singularity
+module load singularity cuda/10
 
 LOCAL="${BASERESULTSDIR}/${EXP_NAME}_${SLURM_JOB_ID}"
 MOUNT="${RESULTSDIR_CONTAINER}"
+OVERLAY="${OVERLAYDIR}"
 
 if [ ! -d "$LOCAL" ]; then
     mkdir "$LOCAL"
@@ -23,6 +24,9 @@ fi
 # make directory that singularity can mount to and use to setup a database
 # such as postgresql or a monogdb etc.
 mkdir db
+
+# make overlay directory, which may or may not be used
+mkdir overlay
 
 # --nv option: bind to system libraries (access to GPUS etc.)
 # --no-home and --contain mimics the docker container behavior
@@ -33,6 +37,7 @@ singularity run \
             --nv \
             -B "${LOCAL}:${MOUNT}" \
             -B db:/db \
+            -B overlay:"${OVERLAY}" \
             --no-home \
             --contain \
             "$CONTAINER" \
