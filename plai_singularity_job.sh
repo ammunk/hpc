@@ -34,8 +34,8 @@ fi
 singularity run \
             --nv \
             -B "${LOCAL}:${MOUNT}" \
-            -B "${EXP_DIR}/db":/db \
-            -B "${EXP_DIR}/overlay":"${OVERLAY}" \
+            -B "${DB}":/db \
+            -B "${OVERLAY}":"${OVERLAYDIR_CONTAINER}" \
             --no-home \
             --contain \
             "$CONTAINER" \
