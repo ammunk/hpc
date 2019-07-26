@@ -45,7 +45,7 @@ singularity run \
             --no-home \
             --contain \
             "$CONTAINER" \
-            "$CMD"
+            "$CMD" > /dev/null
 
 # remove temporary directories
 rm -r "$OVERLAY" "$DB"

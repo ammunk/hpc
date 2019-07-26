@@ -16,4 +16,4 @@ docker run --runtime=nvidia --rm \
        -v "${LOCAL}:${MOUNT}" \
        --name "${EXP_NAME}_${PBS_JOBID}" \
        "$CONTAINER" \
-       "$CMD"
+       "$CMD" > /dev/null
