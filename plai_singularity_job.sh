@@ -10,6 +10,7 @@ MOUNT="${RESULTSDIR_CONTAINER}"
 OVERLAY="${OVERLAYDIR_CONTAINER}"
 DB="${BASERESULTSDIR}/db_${SLURM_JOB_ID}"
 OVERLAY="${BASERESULTSDIR}/overlay_${SLURM_JOB_ID}"
+TMP="${BASERESULTSDIR}/tmp_${SLURM_JOB_ID}"
 
 if [ ! -d "$LOCAL" ]; then
     mkdir "$LOCAL"
@@ -26,6 +27,10 @@ if [ ! -d "$OVERLAY" ]; then
     mkdir "$OVERLAY"
 fi
 
+# make tmp overlay directory otherwise /tmp in container will have very limited disk space
+if [ ! -d "$TMP" ]; then
+    mkdir "$TMP"
+fi
 # --nv option: bind to system libraries (access to GPUS etc.)
 # --no-home and --contain mimics the docker container behavior
 # without those /home and more will be mounted be default
@@ -35,6 +40,7 @@ singularity run \
             --nv \
             -B "${LOCAL}:${MOUNT}" \
             -B "${DB}":/db \
+            -B "${TMP}":/tmp \
             -B "${OVERLAY}":"${OVERLAYDIR_CONTAINER}" \
             --no-home \
             --contain \
@@ -43,4 +49,4 @@ singularity run \
             "$CMD" > /dev/null
 
 # remove temporary directories
-rm -r "$OVERLAY" "$DB"
+rm -r "$OVERLAY" "$DB" "$TMP"
