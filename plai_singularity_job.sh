@@ -42,6 +42,7 @@ singularity run \
             -B "${DB}":/db \
             -B "${TMP}":/tmp \
             -B "${OVERLAY}":"${OVERLAYDIR_CONTAINER}" \
+            --cleanenv \
             --no-home \
             --contain \
             --writable-tmpfs \
