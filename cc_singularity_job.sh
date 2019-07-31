@@ -55,7 +55,7 @@ singularity run \
             --contain \
             --writable-tmpfs \
             "$CONTAINER" \
-            "$CMD" > /dev/null
+            "$CMD"
 
 # remove temporary directories
 rm -r "$OVERLAY" "$DB" "$TMP"
