@@ -9,7 +9,7 @@
 #   - BASERESULTSDIR
 #   - RESULTSDIR_CONTAINER
 
-module load singularity/3.2 cuda/10
+module load singularity/3.2
 
 LOCAL="${BASERESULTSDIR}/${EXP_NAME}"
 MOUNT="${RESULTSDIR_CONTAINER}"
