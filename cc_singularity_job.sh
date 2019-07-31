@@ -37,7 +37,6 @@ if [ ! -d "$TMP" ]; then
     mkdir "$TMP"
 fi
 
-
 # --nv option: bind to system libraries (access to GPUS etc.)
 # --no-home and --contain mimics the docker container behavior
 # without those /home and more will be mounted be default

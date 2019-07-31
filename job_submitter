@@ -64,7 +64,7 @@ VARIABLES="CMD=${CMD},OVERLAYDIR_CONTAINER=${OVERLAYDIR_CONTAINER},CONTAINER=${C
 
 # SUBMIT JOBS
 
-for n in {1.."$N"}
+for n in $(seq 1 $N)
 do
     # specify results directory ID (so that each job can mount its own folder)
     if [[ "$SCHEDULER" = "PBS" ]]; then
