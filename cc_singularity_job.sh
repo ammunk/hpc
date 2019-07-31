@@ -7,12 +7,11 @@
 #   - CMD
 #   - CONTAINER
 #   - BASERESULTSDIR
-#   - RESULTSDIR_CONTAINER
+#   - OVERLAYDIR_CONTAINER
 
 module load singularity/3.2
 
-LOCAL="${BASERESULTSDIR}/${EXP_NAME}"
-MOUNT="${RESULTSDIR_CONTAINER}"
+LOCAL="${BASERESULTSDIR}"
 OVERLAY="${OVERLAYDIR_CONTAINER}"
 DB="${BASERESULTSDIR}/db_${SLURM_JOB_ID}"
 OVERLAY="${BASERESULTSDIR}/overlay_${SLURM_JOB_ID}"
@@ -25,12 +24,12 @@ fi
 # make directory that singularity can mount to and use to setup a database
 # such as postgresql or a monogdb etc.
 if [ ! -d "$DB" ]; then
-mkdir "$DB"
+    mkdir "$DB"
 fi
 
 # make overlay directory, which may or may not be used
 if [ ! -d "$OVERLAY" ]; then
-mkdir "$OVERLAY"
+    mkdir "$OVERLAY"
 fi
 
 # make tmp overlay directory otherwise /tmp in container will have very limited disk space
@@ -46,7 +45,7 @@ fi
 # any argument give "CMD" is passed to the runscript
 singularity run \
             --nv \
-            -B "${LOCAL}:${MOUNT}" \
+            -B "${LOCAL}:/results" \
             -B "${DB}":/db \
             -B "${TMP}":/tmp \
             -B "${OVERLAY}":"${OVERLAYDIR_CONTAINER}" \

@@ -5,7 +5,7 @@
 #   - BASERESULTSDIR
 #   - RESULTSDIR_CONTAINER
 
-LOCAL="${BASERESULTSDIR}/${EXP_NAME}"
+LOCAL="${BASERESULTSDIR}"
 MOUNT="${RESULTSDIR_CONTAINER}"
 OVERLAY="${OVERLAYDIR_CONTAINER}"
 DB="${BASERESULTSDIR}/db_${SLURM_JOB_ID}"
@@ -38,7 +38,7 @@ fi
 # any argument give "CMD" is passed to the runscript
 singularity run \
             --nv \
-            -B "${LOCAL}:${MOUNT}" \
+            -B "${LOCAL}:/results" \
             -B "${DB}":/db \
             -B "${TMP}":/tmp \
             -B "${OVERLAY}":"${OVERLAYDIR_CONTAINER}" \

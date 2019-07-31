@@ -10,44 +10,42 @@
 
 # IF USING MPI WITH SEVERAL "TASKS" - I.E. USING SEVERAL NODES: USE DIFFERENT SCRIPT
 
+# general settings
+PROJECT_NAME="PN" # project name
+EXP_NAME="TEST"
+USE_MONGO="FALSE"
+N=1 # number of times to submit
+CPUS_PER_TASK=1 # should be no more than 6 per GPU! -- SEE COMPUTE CANADA
+MEM="5G" # G/M is Gigabyte/Megabyte
+TIME="01:00:00" # <HH:MM:MM>
+GPUS=1
+SCHEDULER="PBS" # SLURM/PBS
+# PBS specific arguments
+NODES="berkeley"
+QUEUE="gpu"
+
+# an overlay where the container need write permissions
+# (MAKE SURE IT CORRESPONDS WITH WHATEVER IS DEFINED IN SINGULARITY FILE)
+OVERLAYDIR_CONTAINER="/"
+
+# container arguments
+CONTAINER_TYPE="docker" # docker/singularity
+CONTAINER_NAME="raven.sif"
+
+# command send to container
+CMD=""
+
+VARIABLES="CMD=${CMD},OVERLAYDIR_CONTAINER=${OVERLAYDIR_CONTAINER},CONTAINER=${CONTAINER_NAME},BASERESULTSDIR=${BASERESULTSDIR}"
+
 # Directory where this script is called
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+EXP_DIR="$(dirname "$DIR")" # get parent directory from where this script is called (assumes submitted from exp_dir/hpc_scripts)
 
 # create hpc_output directory if it does not exist
 if [ ! -d "${DIR}/hpc_output" ]; then
     mkdir "${DIR}/hpc_output"
 fi
-
-# project name
-PROJECT_NAME="PN"
-
-SCHEDULER="PBS" # SLURM/PBS
-
-# PBS specific arguments
-NODES="berkeley"
-QUEUE="gpu"
-
-# general settings
-CPUS_PER_TASK=1 # should be no more than 6 per GPU! -- SEE COMPUTE CANADA
-MEM="5G" # G/M is Gigabyte/Megabyte
-TIME="01:00:00" # <HH:MM:MM>
-GPUS=1
-
-# container arguments
-CONTAINER_TYPE="docker" # docker/singularity
-CONTAINER_NAME="raven"
-
-# number of times to submit
-N=1
-
-# command send to container
-CMD=""
-
-# experimental environment variables (BELOW IS AN EXAMPLE WHERE THE EXPERIMENT IS CALLED RAVEN)
-
-EXP_NAME="TEST"
-USE_MONGO="FALSE"
-EXP_DIR="$(dirname "$DIR")" # get parent directory from where this script is called (assumes submitted from exp_dir/hpc_scripts)
 
 # set base directory names to store results from jobs (specific directory will be given in the job script)
 if [ ! -z ${SCRATCH+x} ]; then
@@ -63,12 +61,6 @@ fi
 if [ ! -d "$BASERESULTSDIR" ]; then
     mkdir -p "$BASERESULTSDIR"
 fi
-
-RESULTSDIR_CONTAINER="/results"
-
-OVERLAYDIR_CONTAINER="/"
-
-VARIABLES="CMD=${CMD},OVERLAYDIR_CONTAINER=${OVERLAYDIR_CONTAINER},CONTAINER=${CONTAINER_NAME},BASERESULTSDIR=${BASERESULTSDIR},RESULTSDIR_CONTAINER=${RESULTSDIR_CONTAINER}"
 
 # SUBMIT JOBS
 
