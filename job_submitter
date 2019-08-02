@@ -40,55 +40,55 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 EXP_DIR="$(dirname "$DIR")" # get parent directory from where this script is called (assumes submitted from exp_dir/hpc_scripts)
 
-# create hpc_output directory if it does not exist
-if [ ! -d "${DIR}/hpc_output" ]; then
-    mkdir "${DIR}/hpc_output"
-fi
-
 # set base directory names to store results from jobs (specific directory will be given in the job script)
 if [ ! -z ${SCRATCH+x} ]; then
+
+    # resolve scratch location
     if [ -d ${SCRATCH}/amunk_docker ]; then # we are on local hpc
         BASERESULTSDIR="${SCRATCH}/amunk_docker/${PROJECT_NAME}"
     else # we are on compute canada
         BASERESULTSDIR="${SCRATCH}/${PROJECT_NAME}"
     fi
+
+    rsync -av "${EXP_DIR}/${CONTAINER}" "${BASERESULTSDIR}"
+
+    # create hpc_output directory if it does not exist
+    if [ ! -d "${BASERESULTSDIR}/hpc_output" ]; then
+        mkdir -p "${BASERESULTSDIR}/hpc_output"
+    fi
+
+    VARIABLES="CMD=${CMD},OVERLAYDIR_CONTAINER=${OVERLAYDIR_CONTAINER},CONTAINER=${CONTAINER_NAME},BASERESULTSDIR=${BASERESULTSDIR}"
+
+    # SUBMIT JOBS
+
+    for n in $(seq 1 $N)
+    do
+        # specify results directory ID (so that each job can mount its own folder)
+        if [[ "$SCHEDULER" = "PBS" ]]; then
+            qsub -N "$EXP_NAME" \
+                -q "$QUEUE" \
+                -l "nodes=${NODES}:ppn=${CPUS_PER_TASK}:gpus=${GPUS}:mem=${MEM}:walltime=${TIME}" \
+                -o "${BASERESULTSDIR}/hpc_output/${EXP_NAME}_%j.out" \
+                -e "${BASERESULTSDIR}/hpc_output/${EXP_NAME}_%j.err" \
+                -v "$VARIABLES,EXP_NAME=${EXP_NAME},EXP_DIR=${EXP_DIR},USE_MONGO=${USE_MONGO}" \
+                -D "$EXP_DIR" \
+                "~/hpc/plai_${CONTAINER}_job.sh"
+        elif [[ "$SCHEDULER" = "SLURM" ]]; then
+            # COMPUTE CANADA ONLY SUPPORTS SINGULARITY
+            # COMPUTE CANADA should NEVER use mongoDB (at least not yet!)
+            sbatch "--job_name=${EXP_NAME}" \
+                "--time=${TIME}" \
+                "--cpus-per-task=${CPUS_PER_TASK}" \
+                "--mem-per-cpu=${MEM}" \
+                "--gres=gpu:${GPUS}" \
+                --chdir="$EXP_DIR" \
+                -o "${BASERESULTSDIR}/hpc_output/${EXP_NAME}_%j.out" \
+                "--export=ALL,${VARIABLES},EXP_NAME=${EXP_NAME},EXP_DIR=${EXP_DIR},USE_MONGO=FALSE" \
+                ~/hpc/cc_singularity_job.sh
+        fi
+        sleep 1 # sleep so that we do not overwhelm the scheduler (SEE e.g. compute canada's website)
+    done
+
 else
     exit 1
 fi
-
-if [ ! -d "$BASERESULTSDIR" ]; then
-    mkdir -p "$BASERESULTSDIR"
-fi
-
-VARIABLES="CMD=${CMD},OVERLAYDIR_CONTAINER=${OVERLAYDIR_CONTAINER},CONTAINER=${CONTAINER_NAME},BASERESULTSDIR=${BASERESULTSDIR}"
-
-# SUBMIT JOBS
-
-for n in $(seq 1 $N)
-do
-    # specify results directory ID (so that each job can mount its own folder)
-    if [[ "$SCHEDULER" = "PBS" ]]; then
-        qsub -N "$EXP_NAME" \
-             -q "$QUEUE" \
-             -l "nodes=${NODES}:ppn=${CPUS_PER_TASK}:gpus=${GPUS}:mem=${MEM}:walltime=${TIME}" \
-             -o "${DIR}/hpc_output/${EXP_NAME}_%j.out" \
-             -e "${DIR}/hpc_output/${EXP_NAME}_%j.err" \
-             -v "$VARIABLES,EXP_NAME=${EXP_NAME},EXP_DIR=${EXP_DIR},USE_MONGO=${USE_MONGO}" \
-             -D "$EXP_DIR" \
-             "~/hpc/plai_${CONTAINER}_job.sh"
-    elif [[ "$SCHEDULER" = "SLURM" ]]; then
-        # COMPUTE CANADA ONLY SUPPORTS SINGULARITY
-        # COMPUTE CANADA should NEVER use mongoDB (at least not yet!)
-        sbatch "--job_name=${EXP_NAME}" \
-               "--time=${TIME}" \
-               "--cpus-per-task=${CPUS_PER_TASK}" \
-               "--mem=${MEM}" \
-               "--gres=gpu:${GPUS}" \
-               --chdir="$EXP_DIR" \
-               -o "${DIR}/hpc_output/${EXP_NAME}_%j.out" \
-               -e "${DIR}/hpc_output/${EXP_NAME}_%j.err" \
-               "--export=ALL,${VARIABLES},EXP_NAME=${EXP_NAME},EXP_DIR=${EXP_DIR},USE_MONGO=FALSE" \
-               ~/hpc/cc_singularity_job.sh
-    fi
-    sleep 1 # sleep so that we do not overwhelm the scheduler (SEE e.g. compute canada's website)
-done
