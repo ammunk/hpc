@@ -50,12 +50,12 @@ if [ ! -z ${SCRATCH+x} ]; then
         BASERESULTSDIR="${SCRATCH}/${PROJECT_NAME}"
     fi
 
-    rsync -av "${EXP_DIR}/${CONTAINER}" "${BASERESULTSDIR}"
-
     # create hpc_output directory if it does not exist
     if [ ! -d "${BASERESULTSDIR}/hpc_output" ]; then
         mkdir -p "${BASERESULTSDIR}/hpc_output"
     fi
+
+    rsync -av "${EXP_DIR}/${CONTAINER}" "${BASERESULTSDIR}"
 
     VARIABLES="CMD=${CMD},OVERLAYDIR_CONTAINER=${OVERLAYDIR_CONTAINER},CONTAINER=${CONTAINER_NAME},BASERESULTSDIR=${BASERESULTSDIR}"
 
