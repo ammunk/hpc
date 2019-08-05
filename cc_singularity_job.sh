@@ -49,7 +49,7 @@ singularity run \
             -B "${OVERLAY}":"${OVERLAYDIR_CONTAINER}" \
             --cleanenv \
             --no-home \
-            --contain \
+            --containall \
             --writable-tmpfs \
             "$CONTAINER" \
             "$CMD"
