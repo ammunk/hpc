@@ -55,8 +55,6 @@ if [ ! -z ${SCRATCH+x} ]; then
         mkdir -p "${BASERESULTSDIR}/hpc_output"
     fi
 
-    rsync -av "${EXP_DIR}/${CONTAINER}" "${BASERESULTSDIR}"
-
     VARIABLES="CMD=${CMD},OVERLAYDIR_CONTAINER=${OVERLAYDIR_CONTAINER},CONTAINER=${CONTAINER_NAME},BASERESULTSDIR=${BASERESULTSDIR}"
 
     # SUBMIT JOBS
@@ -74,6 +72,9 @@ if [ ! -z ${SCRATCH+x} ]; then
                 -D "$EXP_DIR" \
                 "~/hpc/plai_${CONTAINER}_job.sh"
         elif [[ "$SCHEDULER" = "SLURM" ]]; then
+
+            rsync -av "${EXP_DIR}/${CONTAINER}" "${BASERESULTSDIR}"
+
             # COMPUTE CANADA ONLY SUPPORTS SINGULARITY
             # COMPUTE CANADA should NEVER use mongoDB (at least not yet!)
             sbatch "--job_name=${EXP_NAME}" \
