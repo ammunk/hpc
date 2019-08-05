@@ -73,7 +73,9 @@ if [ ! -z ${SCRATCH+x} ]; then
                 "~/hpc/plai_${CONTAINER}_job.sh"
         elif [[ "$SCHEDULER" = "SLURM" ]]; then
 
-            rsync -av "${EXP_DIR}/${CONTAINER}" "${BASERESULTSDIR}"
+            if [ ! -f "${EXP_DIR}/${CONTAINER}" ]; then
+                rsync -av "${EXP_DIR}/${CONTAINER}" "${BASERESULTSDIR}"
+            fi
 
             # COMPUTE CANADA ONLY SUPPORTS SINGULARITY
             # COMPUTE CANADA should NEVER use mongoDB (at least not yet!)
