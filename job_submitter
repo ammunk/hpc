@@ -82,7 +82,7 @@ if [ ! -z ${SCRATCH+x} ]; then
                 "--cpus-per-task=${CPUS_PER_TASK}" \
                 "--mem-per-cpu=${MEM}" \
                 "--gres=gpu:${GPUS}" \
-                --chdir="$EXP_DIR" \
+                --chdir="${BASERESULTSDIR}" \
                 -o "${BASERESULTSDIR}/hpc_output/${EXP_NAME}_%j.out" \
                 "--export=ALL,${VARIABLES},EXP_NAME=${EXP_NAME},USE_MONGO=FALSE" \
                 ~/hpc/cc_singularity_job.sh
