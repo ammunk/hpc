@@ -77,7 +77,7 @@ if [ ! -z ${SCRATCH+x} ]; then
 
             # COMPUTE CANADA ONLY SUPPORTS SINGULARITY
             # COMPUTE CANADA should NEVER use mongoDB (at least not yet!)
-            sbatch "--job_name=${EXP_NAME}" \
+            sbatch "--job-name=${EXP_NAME}" \
                 "--time=${TIME}" \
                 "--cpus-per-task=${CPUS_PER_TASK}" \
                 "--mem=${MEM}" \
