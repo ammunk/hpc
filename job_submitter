@@ -26,7 +26,7 @@ QUEUE="gpu"
 
 # an overlay where the container need write permissions
 # (MAKE SURE IT CORRESPONDS WITH WHATEVER IS DEFINED IN SINGULARITY FILE)
-OVERLAYDIR_CONTAINER="/"
+OVERLAYDIR_CONTAINER="/overlay"
 
 # container arguments
 CONTAINER_TYPE="docker" # docker/singularity
