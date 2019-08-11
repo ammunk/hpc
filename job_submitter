@@ -11,7 +11,7 @@
 # IF USING MPI WITH SEVERAL "TASKS" - I.E. USING SEVERAL NODES: USE DIFFERENT SCRIPT
 
 # general settings
-PROJECT_NAME="PN" # project name
+PROJECT_DIR="PN" # project name
 EXP_NAME="TEST"
 USE_MONGO="FALSE"
 N=1 # number of times to submit
@@ -29,7 +29,7 @@ QUEUE="gpu"
 OVERLAYDIR_CONTAINER="/overlay"
 
 # container arguments
-CONTAINER_TYPE="docker" # docker/singularity
+CONTAINER_TYPE="singularity" # docker/singularity
 CONTAINER_NAME="raven.sif"
 
 # command send to container
@@ -45,9 +45,9 @@ if [ ! -z ${SCRATCH+x} ]; then
 
     # resolve scratch location
     if [ -d ${SCRATCH}/amunk_docker ]; then # we are on local hpc
-        BASERESULTSDIR="${SCRATCH}/amunk_docker/${PROJECT_NAME}"
+        BASERESULTSDIR="${SCRATCH}/amunk_docker/${PROJECT_DIR}"
     else # we are on compute canada
-        BASERESULTSDIR="${SCRATCH}/${PROJECT_NAME}"
+        BASERESULTSDIR="${SCRATCH}/${PROJECT_DIR}"
     fi
 
     # create hpc_output directory if it does not exist
@@ -73,7 +73,7 @@ if [ ! -z ${SCRATCH+x} ]; then
                 "~/hpc/plai_${CONTAINER}_job.sh"
         elif [[ "$SCHEDULER" = "SLURM" ]]; then
 
-            rsync -av "${EXP_DIR}/${CONTAINER}" "${BASERESULTSDIR}"
+            rsync -av "${EXP_DIR}/${CONTAINER_NAME}" "${BASERESULTSDIR}"
 
             # COMPUTE CANADA ONLY SUPPORTS SINGULARITY
             # COMPUTE CANADA should NEVER use mongoDB (at least not yet!)
