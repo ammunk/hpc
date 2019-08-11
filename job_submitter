@@ -69,7 +69,7 @@ if [ ! -z ${SCRATCH+x} ]; then
                 -o "${BASERESULTSDIR}/hpc_output/${EXP_NAME}_%j.out" \
                 -e "${BASERESULTSDIR}/hpc_output/${EXP_NAME}_%j.err" \
                 -v "$VARIABLES,EXP_NAME=${EXP_NAME},EXP_DIR=${EXP_DIR},USE_MONGO=${USE_MONGO}" \
-                -D "$EXP_DIR" \
+                -D "${BASERESULTSDIR}" \
                 "~/hpc/plai_${CONTAINER}_job.sh"
         elif [[ "$SCHEDULER" = "SLURM" ]]; then
 
