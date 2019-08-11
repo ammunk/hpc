@@ -68,9 +68,9 @@ if [ ! -z ${SCRATCH+x} ]; then
                 -l "nodes=${NODES}:ppn=${CPUS_PER_TASK}:gpus=${GPUS}:mem=${MEM}:walltime=${TIME}" \
                 -o "${BASERESULTSDIR}/hpc_output/${EXP_NAME}_%j.out" \
                 -e "${BASERESULTSDIR}/hpc_output/${EXP_NAME}_%j.err" \
-                -v "$VARIABLES,EXP_NAME=${EXP_NAME},EXP_DIR=${EXP_DIR},USE_MONGO=${USE_MONGO}" \
+                -v "$VARIABLES,EXP_NAME=${EXP_NAME},USE_MONGO=${USE_MONGO}" \
                 -D "${BASERESULTSDIR}" \
-                "~/hpc/plai_${CONTAINER}_job.sh"
+                ~/hpc/plai_${CONTAINER}_job.sh
         elif [[ "$SCHEDULER" = "SLURM" ]]; then
 
             rsync -av "${EXP_DIR}/${CONTAINER_NAME}" "${BASERESULTSDIR}"
@@ -80,7 +80,7 @@ if [ ! -z ${SCRATCH+x} ]; then
             sbatch "--job_name=${EXP_NAME}" \
                 "--time=${TIME}" \
                 "--cpus-per-task=${CPUS_PER_TASK}" \
-                "--mem-per-cpu=${MEM}" \
+                "--mem=${MEM}" \
                 "--gres=gpu:${GPUS}" \
                 --chdir="${BASERESULTSDIR}" \
                 -o "${BASERESULTSDIR}/hpc_output/${EXP_NAME}_%j.out" \
