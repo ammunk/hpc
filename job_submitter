@@ -84,7 +84,7 @@ if [ ! -z ${SCRATCH+x} ]; then
                 "--gres=gpu:${GPUS}" \
                 --chdir="$EXP_DIR" \
                 -o "${BASERESULTSDIR}/hpc_output/${EXP_NAME}_%j.out" \
-                "--export=ALL,${VARIABLES},EXP_NAME=${EXP_NAME},EXP_DIR=${EXP_DIR},USE_MONGO=FALSE" \
+                "--export=ALL,${VARIABLES},EXP_NAME=${EXP_NAME},USE_MONGO=FALSE" \
                 ~/hpc/cc_singularity_job.sh
         fi
         sleep 1 # sleep so that we do not overwhelm the scheduler (SEE e.g. compute canada's website)
