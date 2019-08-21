@@ -9,14 +9,16 @@
 #   - BASERESULTSDIR
 #   - OVERLAYDIR_CONTAINER
 
-export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
-
 module load singularity/3.2
 
-LOCAL="${BASERESULTSDIR}"
-DB="${BASERESULTSDIR}/db_${SLURM_JOB_ID}"
-OVERLAY="${BASERESULTSDIR}/overlay_${SLURM_JOB_ID}"
-TMP="${BASERESULTSDIR}/tmp_${SLURM_JOB_ID}"
+# move data to temporary SLURM DIR which is much faster for I/O
+rsync --ignore-existing -raz results "$SLURM_TMPDIR"
+rsync -raz "$CONTAINER_NAME" "$SLURM_TMPDIR"
+cd "$SLURM_TMPDIR"
+
+DB="db_${SLURM_JOB_ID}"
+OVERLAY="overlay_${SLURM_JOB_ID}"
+TMP="tmp_${SLURM_JOB_ID}"
 
 if [ ! -d "$LOCAL" ]; then
     mkdir "$LOCAL"
@@ -39,13 +41,13 @@ if [ ! -d "$TMP" ]; then
 fi
 
 # --nv option: bind to system libraries (access to GPUS etc.)
-# --no-home and --contain mimics the docker container behavior
+# --no-home and --containall mimics the docker container behavior
 # without those /home and more will be mounted be default
 # using "run" executed the "runscript" specified by the "%runscript"
 # any argument give "CMD" is passed to the runscript
 singularity run \
             --nv \
-            -B "${LOCAL}:/results" \
+            -B "results:/results" \
             -B "${DB}":/db \
             -B "${TMP}":/tmp \
             -B "${OVERLAY}":"${OVERLAYDIR_CONTAINER}" \
@@ -56,5 +58,6 @@ singularity run \
             "$CONTAINER" \
             "$CMD"
 
-# remove temporary directories
-rm -r "$OVERLAY" "$DB" "$TMP"
+
+# move results back to SCRATCH using rsync (to only add new stuff)
+rsync --ignore-existing -raz results "${BASERESULTSDIR}"
