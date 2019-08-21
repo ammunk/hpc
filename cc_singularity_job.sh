@@ -12,8 +12,10 @@
 module load singularity/3.2
 
 # move data to temporary SLURM DIR which is much faster for I/O
-rsync --ignore-existing -raz results "$SLURM_TMPDIR"
-rsync -raz "$CONTAINER_NAME" "$SLURM_TMPDIR"
+echo "Copying files to ${SLURM_TMPDIR}"
+time rsync --ignore-existing -raz results "$SLURM_TMPDIR"
+echo "Copying singularity container to ${SLURM_TMPDIR}"
+time rsync -raz "$CONTAINER_NAME" "$SLURM_TMPDIR"
 cd "$SLURM_TMPDIR"
 
 DB="db_${SLURM_JOB_ID}"
@@ -60,4 +62,5 @@ singularity run \
 
 
 # move results back to SCRATCH using rsync (to only add new stuff)
-rsync --ignore-existing -raz results "${BASERESULTSDIR}"
+echo "Copying results back to scratch"
+time rsync --ignore-existing -raz results "${BASERESULTSDIR}"
