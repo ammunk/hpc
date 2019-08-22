@@ -18,12 +18,12 @@ if [ ! -f "${BASERESULTSDIR}/results.tar.gz" ]; then
 fi
 
 # move data to temporary SLURM DIR which is much faster for I/O
-echo "Copying files to ${SLURM_TMPDIR}"
+echo "Copying singularity to ${SLURM_TMPDIR}"
 time rsync -raz "$CONTAINER_NAME" "$SLURM_TMPDIR"
 cd "$SLURM_TMPDIR"
 
-# decompress
-tar -xf ${BASERESULTSDIR}/results.tar.gz
+echo "Moving tarball to slurm tmpdir"
+time tar -xf ${BASERESULTSDIR}/results.tar.gz
 
 DB="db_${SLURM_JOB_ID}"
 OVERLAY="overlay_${SLURM_JOB_ID}"
