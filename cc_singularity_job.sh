@@ -14,7 +14,7 @@ module load singularity/3.2
 # see eg. https://docs.computecanada.ca/wiki/A_tutorial_on_%27tar%27
 
 if [ ! -f "${BASERESULTSDIR}/results.tar.gz" ]; then
-   time tar -c --use-compress-program="pigz -p $SLURM_CPUS_PER_TASK" -f results.tar.gz results
+   time tar -cf results.tar.gz results
 fi
 
 # move data to temporary SLURM DIR which is much faster for I/O
@@ -23,7 +23,7 @@ time rsync -raz "$CONTAINER_NAME" "$SLURM_TMPDIR"
 cd "$SLURM_TMPDIR"
 
 # decompress
-tar -zxf ${BASERESULTSDIR}/results.tar.gz
+tar -xf ${BASERESULTSDIR}/results.tar.gz
 
 DB="db_${SLURM_JOB_ID}"
 OVERLAY="overlay_${SLURM_JOB_ID}"
@@ -69,7 +69,7 @@ singularity run \
 
 # move results back to SCRATCH using rsync (to only add new stuff)
 echo "Copying results back to scratch"
-time tar -c --use-compress-program="pigz -p $SLURM_CPUS_PER_TASK" -f ${BASERESULTSDIR}/results.tar.gz results
+time tar -cf ${BASERESULTSDIR}/results.tar.gz results
 # decompress
 cd $BASERESULTSDIR
-tar -zxf ${BASERESULTSDIR}/results.tar.gz
+tar -xf ${BASERESULTSDIR}/results.tar.gz
