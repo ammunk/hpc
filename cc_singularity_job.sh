@@ -29,10 +29,6 @@ DB="db_${SLURM_JOB_ID}"
 OVERLAY="overlay_${SLURM_JOB_ID}"
 TMP="tmp_${SLURM_JOB_ID}"
 
-if [ ! -d "$LOCAL" ]; then
-    mkdir "$LOCAL"
-fi
-
 # make directory that singularity can mount to and use to setup a database
 # such as postgresql or a monogdb etc.
 if [ ! -d "$DB" ]; then
