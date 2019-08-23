@@ -19,7 +19,7 @@ fi
 
 # move data to temporary SLURM DIR which is much faster for I/O
 echo "Copying singularity to ${SLURM_TMPDIR}"
-time rsync -av "$CONTAINER_NAME" "$SLURM_TMPDIR"
+time rsync -av "$CONTAINER" "$SLURM_TMPDIR"
 cd "$SLURM_TMPDIR"
 
 echo "Moving tarball to slurm tmpdir"
