@@ -22,7 +22,7 @@ echo "Copying singularity to ${SLURM_TMPDIR}"
 time rsync -av "$CONTAINER" "$SLURM_TMPDIR"
 
 if [ ! -z ${STUFF_TO_TAR+x} ]; then
-    if [ ! -f "tar_ball_${STUFF_TO_TAR}.tar.gz"]; then
+    if [ ! -f "tar_ball_${STUFF_TO_TAR}.tar.gz" ]; then
        time tar -cf "tar_ball_${STUFF_TO_TAR}.tar" $STUFF_TO_TAR
     fi
 fi
