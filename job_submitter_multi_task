@@ -1,0 +1,92 @@
+#!/usr/bin/bash
+
+# For SLURM see: https://docs.computecanada.ca/wiki/Using_GPUs_with_Slurm and https://docs.computecanada.ca/wiki/Running_jobs
+# For PBS see: https://hpcc.usc.edu/support/documentation/running-a-job-on-the-hpcc-cluster-using-pbs/
+# Comparing commands see: https://hpcc.usc.edu/support/documentation/pbs-to-slurm/
+
+# THIS SCRIPT ALLOWS ONLY THE USE OF A SINGLE NODE!
+
+# For SLURM: each submission is considered a SINGLE task (UNLESS WE USE MPI)
+
+# IF USING MPI WITH SEVERAL "TASKS" - I.E. USING SEVERAL NODES: USE DIFFERENT SCRIPT
+
+# general settings
+PROJECT_DIR="PN" # project name
+EXP_NAME="TEST"
+USE_MONGO="FALSE"
+N=1 # number of times to submit
+CPUS_PER_TASK=6 # should be no more than 6 per GPU! -- SEE COMPUTE CANADA
+MEM="0" # G/M is Gigabyte/Megabyte - 0 means request all memory
+TIME="01:00:00" # <HH:MM:MM>
+GPUS=4
+ntasks=4
+
+# an overlay where the container need write permissions
+# (MAKE SURE IT CORRESPONDS WITH WHATEVER IS DEFINED IN SINGULARITY FILE)
+OVERLAYDIR_CONTAINER="/overlay"
+
+# container arguments
+CONTAINER_NAME="raven.sif"
+
+# array of commands send to container - number of commands HAS be the same as ntasks
+CMD=""
+
+# Directory where this script is called
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+EXP_DIR="$(dirname "$DIR")" # get parent directory from where this script is called (assumes submitted from exp_dir/hpc_scripts)
+
+# LEAVE EMPTY SO THAT WE DO NOT COPY ANYTHING TO SLURM_TMPDIR
+STUFF_TO_TAR=""
+
+# LEAVE EMPTY SO THAT WE DO COPY ENTIRE RESULTS TO BASERESULTSDIR
+RESULTS_TO_TAR=""
+
+# set base directory names to store results from jobs (specific directory will be given in the job script)
+if [ ! -z ${SCRATCH+x} ]; then
+
+    # resolve scratch location
+    if [ -d ${SCRATCH}/amunk_docker ]; then # we are on local hpc
+        BASERESULTSDIR="${SCRATCH}/amunk_docker/${PROJECT_DIR}"
+    else # we are on compute canada
+        BASERESULTSDIR="${SCRATCH}/${PROJECT_DIR}"
+    fi
+
+    # create hpc_output directory if it does not exist
+    if [ ! -d "${BASERESULTSDIR}/hpc_output" ]; then
+        mkdir -p "${BASERESULTSDIR}/hpc_output"
+    fi
+
+    if [ ! -d "${BASERESULTSDIR}/results" ]; then
+        mkdir -p "${BASERESULTSDIR}/results"
+    fi
+
+    VARIABLES="CMD=${CMD},OVERLAYDIR_CONTAINER=${OVERLAYDIR_CONTAINER},CONTAINER=${CONTAINER_NAME},\
+STUFF_TO_TAR=${STUFF_TO_TAR},RESULTS_TO_TAR=${RESULTS_TO_TAR},BASERESULTSDIR=${BASERESULTSDIR},ntasks=${ntasks}"
+
+    # SUBMIT JOBS
+
+    for n in $(seq 1 $N)
+    do
+        # specify results directory ID (so that each job can mount its own folder)
+        rsync -av "${EXP_DIR}/${CONTAINER_NAME}" "${BASERESULTSDIR}"
+
+        # COMPUTE CANADA ONLY SUPPORTS SINGULARITY
+        # COMPUTE CANADA should NEVER use mongoDB (at least not yet!)
+        sbatch "--job-name=${EXP_NAME}" \
+            "--time=${TIME}" \
+            "--nodes=1" \
+            "--ntasks=${ntasks}" \
+            "--cpus-per-task=${CPUS_PER_TASK}" \
+            "--mem=${MEM}" \
+            "--gres=gpu:${GPUS}" \
+            --chdir="${BASERESULTSDIR}" \
+            -o "${BASERESULTSDIR}/hpc_output/${EXP_NAME}_%j.out" \
+            "--export=ALL,${VARIABLES},EXP_NAME=${EXP_NAME},USE_MONGO=FALSE" \
+            ~/hpc/cc_singularity_job_multi_task.sh
+        sleep 1 # sleep so that we do not overwhelm the scheduler (SEE e.g. compute canada's website)
+    done
+
+else
+    exit 1
+fi

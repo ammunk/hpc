@@ -11,6 +11,7 @@
 #   - OVERLAYDIR_CONTAINER
 #   - STUFF_TO_TAR - e.g. move the training data to the SLURM_TMPDIR for traning a network
 #   - RESULTS_TO_TAR - the results we seek to move back from the temporary file; e.g. if we train an inference network we don't need to also move the training data back again
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 
 module load singularity/3.2
 
@@ -38,39 +39,53 @@ DB="db_${SLURM_JOB_ID}"
 OVERLAY="overlay_${SLURM_JOB_ID}"
 TMP="tmp_${SLURM_JOB_ID}"
 
+n_commands=${#CMD[@]}
+
 # make directory that singularity can mount to and use to setup a database
-# such as postgresql or a monogdb etc.
-if [ ! -d "$DB" ]; then
-    mkdir "$DB"
-fi
+# such as postgresql or a monogdb etc. make a different DB for each task
+for i in $(seq 0 $(($n_commands-1))); do
+    mkdir "${DB}_${i}"
+done
 
 # make overlay directory, which may or may not be used
-if [ ! -d "$OVERLAY" ]; then
-    mkdir "$OVERLAY"
-fi
+mkdir "$OVERLAY"
 
 # make tmp overlay directory otherwise /tmp in container will have very limited disk space
-if [ ! -d "$TMP" ]; then
-    mkdir "$TMP"
+mkdir "$TMP"
+
+
+if [[ ! n_commands -eq $ntasks ]]; do
+   echo "number of tasks not equal to number of commands"
+   exit 1
 fi
 
-# --nv option: bind to system libraries (access to GPUS etc.)
-# --no-home and --containall mimics the docker container behavior
-# without those /home and more will be mounted be default
-# using "run" executed the "runscript" specified by the "%runscript"
-# any argument give "CMD" is passed to the runscript
-singularity run \
-            --nv \
-            -B "results:/results" \
-            -B "${DB}":/db \
-            -B "${TMP}":/tmp \
-            -B "${OVERLAY}":"${OVERLAYDIR_CONTAINER}" \
-            --cleanenv \
-            --no-home \
-            --containall \
-            --writable-tmpfs \
-            "$CONTAINER" \
-            "$CMD"
+counter=0
+for cmd in $CMD; do
+    # --nv option: bind to system libraries (access to GPUS etc.)
+    # --no-home and --containall mimics the docker container behavior
+    # without those /home and more will be mounted be default
+    # using "run" executed the "runscript" specified by the "%runscript"
+    # any argument give "cmd" is passed to the runscript
+
+    # for more info on srun see - https://docs.computecanada.ca/wiki/Advanced_MPI_scheduling
+    # and https://slurm.schedmd.com/gres.html
+    # and https://slurm.schedmd.com/srun.html
+    srun --gres=gpu:1 --exclusive singularity run \ # we only provide a single gpu to each task
+        --nv \
+        -B "results:/results" \
+        -B "${DB}_${counter}":/db \
+        -B "${TMP}":/tmp \
+        -B "${OVERLAY}":"${OVERLAYDIR_CONTAINER}" \
+        --cleanenv \
+        --no-home \
+        --containall \
+        --writable-tmpfs \
+        "$CONTAINER" \
+        "$cmd"
+    counter=$((counter + 1))
+done
+# wait for each srun to finish
+wait
 
 if [ ! -z ${RESULTS_TO_TAR+x} ]; then
     for file in "${RESULTS_TO_TAR}"; do

@@ -11,6 +11,8 @@
 #   - STUFF_TO_TAR - e.g. move the training data to the SLURM_TMPDIR for traning a network
 #   - RESULTS_TO_TAR - the results we seek to move back from the temporary file; e.g. if we train an inference network we don't need to also move the training data back again
 
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
+
 module load singularity/3.2
 
 # see eg. https://docs.computecanada.ca/wiki/A_tutorial_on_%27tar%27
@@ -76,7 +78,7 @@ if [ ! -z ${RESULTS_TO_TAR+x} ]; then
         mv file "file_${SLURM_JOB_ID}"
     done
 
-    RESULTS_TO_TAR=( $RESULTS_TO_TAR )
+    RESULTS_TO_TAR=($RESULTS_TO_TAR)
     RESULTS_TO_TAR="${RESULTS_TO_TAR[@]}/%/_${SLURM_JOB_ID}"
 
 else
