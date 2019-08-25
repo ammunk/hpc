@@ -29,7 +29,7 @@ OVERLAYDIR_CONTAINER="/overlay"
 CONTAINER_NAME="raven.sif"
 
 # array of commands send to container - number of commands HAS be the same as ntasks
-CMD=""
+CMD=("" "" "" "")
 
 # Directory where this script is called
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
