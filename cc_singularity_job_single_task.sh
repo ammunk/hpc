@@ -8,13 +8,17 @@
 #   - CONTAINER
 #   - BASERESULTSDIR
 #   - OVERLAYDIR_CONTAINER
+#   - STUFF_TO_TAR
+#   - RESULTS_TO_TAR
 
 module load singularity/3.2
 
 # see eg. https://docs.computecanada.ca/wiki/A_tutorial_on_%27tar%27
 
-if [ ! -f "${BASERESULTSDIR}/results.tar.gz" ]; then
-   time tar -cf results.tar.gz results
+if [ ! -z ${STUFF_TO_TAR+x} ]; then
+    if [ ! -f "tar_ball_${STUFF_TO_TAR}.tar.gz"]; then
+       time tar -cf "tar_ball_${STUFF_TO_TAR}.tar.gz" $STUFF_TO_TAR
+    fi
 fi
 
 # move data to temporary SLURM DIR which is much faster for I/O
@@ -22,8 +26,8 @@ echo "Copying singularity to ${SLURM_TMPDIR}"
 time rsync -av "$CONTAINER" "$SLURM_TMPDIR"
 cd "$SLURM_TMPDIR"
 
-echo "Moving tarball to slurm tmpdir"
-time tar -xf ${BASERESULTSDIR}/results.tar.gz
+echo "Moving tarballs to slurm tmpdir"
+time tar -xf "${BASERESULTSDIR}/tar_ball_${STUFF_TO_TAR}.tar.gz"
 
 DB="db_${SLURM_JOB_ID}"
 OVERLAY="overlay_${SLURM_JOB_ID}"
@@ -63,9 +67,15 @@ singularity run \
             "$CONTAINER" \
             "$CMD"
 
+for file in "${RESULTS_TO_TAR}"; do
+    mv file "file_${SLURM_JOB_ID}"
+done
+RESULTS_TO_TAR=( $RESULTS_TO_TAR )
+RESULTS_TO_TAR="${RESULTS_TO_TAR[@]}/%/_${SLURM_JOB_ID}"
+
 # move results back to SCRATCH using rsync (to only add new stuff)
 echo "Copying results back to scratch"
-time tar -cf ${BASERESULTSDIR}/results.tar.gz results
+time tar -cf "tar_ball_${RESULTS_TO_TAR}.tar.gz" $RESULTS_TO_TAR
 # decompress
 cd $BASERESULTSDIR
-tar -xf ${BASERESULTSDIR}/results.tar.gz
+tar -xf "${BASERESULTSDIR}/tar_ball${RESULTS_TO_TAR}.tar.gz"
