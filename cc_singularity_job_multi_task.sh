@@ -55,7 +55,7 @@ mkdir "$OVERLAY"
 mkdir "$TMP"
 
 
-if [[ ! n_commands -eq $ntasks ]]; do
+if [[ ! n_commands -eq $ntasks ]]; then
    echo "number of tasks not equal to number of commands"
    exit 1
 fi
