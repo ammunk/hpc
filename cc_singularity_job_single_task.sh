@@ -15,19 +15,23 @@ module load singularity/3.2
 
 # see eg. https://docs.computecanada.ca/wiki/A_tutorial_on_%27tar%27
 
-if [ ! -z ${STUFF_TO_TAR+x} ]; then
-    if [ ! -f "tar_ball_${STUFF_TO_TAR}.tar.gz"]; then
-       time tar -cf "tar_ball_${STUFF_TO_TAR}.tar.gz" $STUFF_TO_TAR
-    fi
-fi
-
 # move data to temporary SLURM DIR which is much faster for I/O
 echo "Copying singularity to ${SLURM_TMPDIR}"
 time rsync -av "$CONTAINER" "$SLURM_TMPDIR"
+
+if [ ! -z ${STUFF_TO_TAR+x} ]; then
+    if [ ! -f "tar_ball_${STUFF_TO_TAR}.tar.gz"]; then
+       time tar -cf "tar_ball_${STUFF_TO_TAR}.tar" $STUFF_TO_TAR
+    fi
+fi
+
+# go to temporary directory
 cd "$SLURM_TMPDIR"
 
-echo "Moving tarballs to slurm tmpdir"
-time tar -xf "${BASERESULTSDIR}/tar_ball_${STUFF_TO_TAR}.tar.gz"
+if [ ! -z ${STUFF_TO_TAR+x} ]; then
+    echo "Moving tarballs to slurm tmpdir"
+    time tar -xf "${BASERESULTSDIR}/tar_ball_${STUFF_TO_TAR}.tar"
+fi
 
 DB="db_${SLURM_JOB_ID}"
 OVERLAY="overlay_${SLURM_JOB_ID}"
@@ -67,15 +71,21 @@ singularity run \
             "$CONTAINER" \
             "$CMD"
 
-for file in "${RESULTS_TO_TAR}"; do
-    mv file "file_${SLURM_JOB_ID}"
-done
-RESULTS_TO_TAR=( $RESULTS_TO_TAR )
-RESULTS_TO_TAR="${RESULTS_TO_TAR[@]}/%/_${SLURM_JOB_ID}"
+if [ ! -z ${RESULTS_TO_TAR+x} ]; then
+    for file in "${RESULTS_TO_TAR}"; do
+        mv file "file_${SLURM_JOB_ID}"
+    done
 
-# move results back to SCRATCH using rsync (to only add new stuff)
-echo "Copying results back to scratch"
-time tar -cf "tar_ball_${RESULTS_TO_TAR}.tar.gz" $RESULTS_TO_TAR
-# decompress
+    RESULTS_TO_TAR=( $RESULTS_TO_TAR )
+    RESULTS_TO_TAR="${RESULTS_TO_TAR[@]}/%/_${SLURM_JOB_ID}"
+
+else
+    # IF NO RESULTS TO TAR IS SPECIFIED - MAKE A TARBALL OF THE ENTIRE RESULTS DIRECTORY
+    RESULTS_TO_TAR="results"
+
+# make a tarball of the results
+time tar -cf "tar_ball_${RESULTS_TO_TAR}.tar" $RESULTS_TO_TAR
+
+# move unpack the tarball to the BASERESULTSDIR
 cd $BASERESULTSDIR
-tar -xf "${BASERESULTSDIR}/tar_ball${RESULTS_TO_TAR}.tar.gz"
+tar --keep-newer-files -xf "${SLURM_TMPDIR}/tar_ball${RESULTS_TO_TAR}.tar"
