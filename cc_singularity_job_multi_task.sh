@@ -5,6 +5,7 @@
 # THIS SCRIPT IS CALLED OUTSIDE USING "sbatch"
 # FOLLOWING ENV VARIABLES HAS TO BE PROVIDED:
 #   - ntasks - number of tasks to run using srun
+#   - GPUS_PER_TASK - number of each GPUS per task
 #   - CMD - CMD should be a list of commands (one command for each task); len(CMD) = ntasks
 #   - CONTAINER
 #   - BASERESULTSDIR
@@ -70,7 +71,7 @@ for cmd in $CMD; do
     # for more info on srun see - https://docs.computecanada.ca/wiki/Advanced_MPI_scheduling
     # and https://slurm.schedmd.com/gres.html
     # and https://slurm.schedmd.com/srun.html
-    srun --gres=gpu:1 --exclusive singularity run \ # we only provide a single gpu to each task
+    srun --gres=gpu:$GPUS_PER_TASK --exclusive singularity run \
         --nv \
         -B "results:/results" \
         -B "${DB}_${counter}":/db \
