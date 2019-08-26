@@ -15,9 +15,18 @@
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 
 CMD=(${CMD[@]})
-n_commands=${#CMD[@]}
 
-echo $n_commands $ntasks $CMD
+offset=$((${#A[@]} / $N))
+length=${#CMD[@]}
+CMDs=()
+for ((i = 0 ; i < $length ; i+=$offset)); do
+    tmp=${CMD[@]:$i:$offset}
+    CMDs+=( "$tmp" )
+done
+
+n_commands=${#CMDs[@]}
+
+echo $n_commands $ntasks ${CMDs[@]}
 if [[ ! n_commands -eq $ntasks ]]; then
     echo "number of tasks not equal to number of commands"
     exit 1
@@ -64,7 +73,7 @@ mkdir "$OVERLAY"
 mkdir "$TMP"
 
 counter=1
-for cmd in $CMD; do
+for cmd in $CMDs; do
     # --nv option: bind to system libraries (access to GPUS etc.)
     # --no-home and --containall mimics the docker container behavior
     # without those /home and more will be mounted be default
