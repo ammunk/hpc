@@ -14,6 +14,9 @@
 #   - RESULTS_TO_TAR - the results we seek to move back from the temporary file; e.g. if we train an inference network we don't need to also move the training data back again
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 
+n_commands=${#CMD[@]}
+
+echo $n_commands $ntasks $CMD
 module load singularity/3.2
 
 # see eg. https://docs.computecanada.ca/wiki/A_tutorial_on_%27tar%27
@@ -46,7 +49,7 @@ n_commands=${#CMD[@]}
 
 # make directory that singularity can mount to and use to setup a database
 # such as postgresql or a monogdb etc. make a different DB for each task
-for i in $(seq 0 $(($n_commands-1))); do
+for i in $(seq $n_commands); do
     mkdir "${DB}_${i}"
 done
 
@@ -62,7 +65,7 @@ if [[ ! n_commands -eq $ntasks ]]; then
    exit 1
 fi
 
-counter=0
+counter=1
 for cmd in $CMD; do
     # --nv option: bind to system libraries (access to GPUS etc.)
     # --no-home and --containall mimics the docker container behavior
