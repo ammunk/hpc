@@ -14,6 +14,7 @@
 #   - RESULTS_TO_TAR - the results we seek to move back from the temporary file; e.g. if we train an inference network we don't need to also move the training data back again
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 
+CMD=(${CMD[@]})
 n_commands=${#CMD[@]}
 
 echo $n_commands $ntasks $CMD
