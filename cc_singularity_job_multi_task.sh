@@ -18,6 +18,11 @@ CMD=(${CMD[@]})
 n_commands=${#CMD[@]}
 
 echo $n_commands $ntasks $CMD
+if [[ ! n_commands -eq $ntasks ]]; then
+    echo "number of tasks not equal to number of commands"
+    exit 1
+fi
+
 module load singularity/3.2
 
 # see eg. https://docs.computecanada.ca/wiki/A_tutorial_on_%27tar%27
@@ -46,8 +51,6 @@ DB="db_${SLURM_JOB_ID}"
 OVERLAY="overlay_${SLURM_JOB_ID}"
 TMP="tmp_${SLURM_JOB_ID}"
 
-n_commands=${#CMD[@]}
-
 # make directory that singularity can mount to and use to setup a database
 # such as postgresql or a monogdb etc. make a different DB for each task
 for i in $(seq $n_commands); do
@@ -59,12 +62,6 @@ mkdir "$OVERLAY"
 
 # make tmp overlay directory otherwise /tmp in container will have very limited disk space
 mkdir "$TMP"
-
-
-if [[ ! n_commands -eq $ntasks ]]; then
-   echo "number of tasks not equal to number of commands"
-   exit 1
-fi
 
 counter=1
 for cmd in $CMD; do
