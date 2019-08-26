@@ -22,9 +22,11 @@ module load singularity/3.2
 echo "Copying singularity to ${SLURM_TMPDIR}"
 time rsync -av "$CONTAINER" "$SLURM_TMPDIR"
 
+stuff_to_tar_suffix=$(tr ' |/' '_' <<< ${STUFF_TO_TAR})
+
 if [ ! -z ${STUFF_TO_TAR+x} ]; then
-    if [ ! -f "tar_ball_${STUFF_TO_TAR}.tar.gz" ]; then
-       time tar -cf "tar_ball_${STUFF_TO_TAR}.tar" $STUFF_TO_TAR
+    if [ ! -f "tar_ball_${stuff_to_tar_suffix}.tar.gz" ]; then
+        time tar -cf "tar_ball_${stuff_to_tar_suffix}.tar" $STUFF_TO_TAR
     fi
 fi
 
@@ -33,7 +35,7 @@ cd "$SLURM_TMPDIR"
 
 if [ ! -z ${STUFF_TO_TAR+x} ]; then
     echo "Moving tarballs to slurm tmpdir"
-    time tar -xf "${BASERESULTSDIR}/tar_ball_${STUFF_TO_TAR}.tar"
+    time tar -xf "${BASERESULTSDIR}/tar_ball_${stuff_to_tar_suffix}.tar"
 fi
 
 DB="db_${SLURM_JOB_ID}"
@@ -99,10 +101,13 @@ if [ ! -z ${RESULTS_TO_TAR+x} ]; then
 else
     # IF NO RESULTS TO TAR IS SPECIFIED - MAKE A TARBALL OF THE ENTIRE RESULTS DIRECTORY
     RESULTS_TO_TAR="results"
+done
+
+results_to_tar_suffix=$(tr ' |/' '_' <<< ${RESULTS_TO_TAR})
 
 # make a tarball of the results
-time tar -cf "tar_ball_${RESULTS_TO_TAR}.tar" $RESULTS_TO_TAR
+time tar -cf "tar_ball_${results_to_tar_suffix}.tar" $RESULTS_TO_TAR
 
 # move unpack the tarball to the BASERESULTSDIR
 cd $BASERESULTSDIR
-tar --keep-newer-files -xf "${SLURM_TMPDIR}/tar_ball${RESULTS_TO_TAR}.tar"
+tar --keep-newer-files -xf "${SLURM_TMPDIR}/tar_ball${results_to_tar_suffix}.tar"
