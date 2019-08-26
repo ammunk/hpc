@@ -23,7 +23,7 @@ export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 
 CMD=(${CMD[@]})
 
-offset=$((${#A[@]} / $N))
+offset=$((${#CMD[@]} / $N))
 length=${#CMD[@]}
 CMDs=()
 for ((i = 0 ; i < $length ; i+=$offset)); do
@@ -83,6 +83,7 @@ mkdir "$OVERLAY"
 # make tmp overlay directory otherwise /tmp in container will have very limited disk space
 mkdir "$TMP"
 
+ls
 counter=1
 for cmd in $CMDs; do
     # --nv option: bind to system libraries (access to GPUS etc.)
@@ -113,10 +114,10 @@ wait
 
 if [ ! -z ${RESULTS_TO_TAR+x} ]; then
     for file in "${RESULTS_TO_TAR}"; do
-        mv file "file_${SLURM_JOB_ID}"
+        mv ${file} "${file}_${SLURM_JOB_ID}"
     done
 
-    RESULTS_TO_TAR=( $RESULTS_TO_TAR )
+    RESULTS_TO_TAR=(${RESULTS_TO_TAR[@]})
     RESULTS_TO_TAR="${RESULTS_TO_TAR[@]}/%/_${SLURM_JOB_ID}"
 
 else

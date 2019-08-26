@@ -65,6 +65,7 @@ fi
 # without those /home and more will be mounted be default
 # using "run" executed the "runscript" specified by the "%runscript"
 # any argument give "CMD" is passed to the runscript
+ls
 singularity run \
             --nv \
             -B "results:/results" \
@@ -80,10 +81,10 @@ singularity run \
 
 if [ ! -z ${RESULTS_TO_TAR+x} ]; then
     for file in "${RESULTS_TO_TAR}"; do
-        mv file "file_${SLURM_JOB_ID}"
+        mv $file "${file}_${SLURM_JOB_ID}"
     done
 
-    RESULTS_TO_TAR=($RESULTS_TO_TAR)
+    RESULTS_TO_TAR=(${RESULTS_TO_TAR[@]})
     RESULTS_TO_TAR="${RESULTS_TO_TAR[@]}/%/_${SLURM_JOB_ID}"
 
 else
