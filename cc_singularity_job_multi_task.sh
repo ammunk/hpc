@@ -111,7 +111,7 @@ if [ ! -z ${RESULTS_TO_TAR+x} ]; then
 else
     # IF NO RESULTS TO TAR IS SPECIFIED - MAKE A TARBALL OF THE ENTIRE RESULTS DIRECTORY
     RESULTS_TO_TAR="results"
-done
+fi
 
 results_to_tar_suffix=$(tr ' |/' '_' <<< ${RESULTS_TO_TAR})
 
