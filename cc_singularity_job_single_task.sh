@@ -22,11 +22,13 @@ module load singularity/3.2
 echo "Copying singularity to ${SLURM_TMPDIR}"
 time rsync -av "$CONTAINER" "$SLURM_TMPDIR"
 
+# replace any "/"-character or spaces with "_" to use as a name
 stuff_to_tar_suffix=$(tr ' |/' '_' <<< ${STUFF_TO_TAR})
 
 if [ ! -z ${STUFF_TO_TAR+x} ]; then
     if [ ! -f "tar_ball_${stuff_to_tar_suffix}.tar.gz" ]; then
-       time tar -cf "tar_ball_${stuff_to_tar_suffix}.tar" $STUFF_TO_TAR
+        # make tarball in $BASERESULTSDIR
+        time tar -cf "tar_ball_${stuff_to_tar_suffix}.tar" $STUFF_TO_TAR
     fi
 fi
 

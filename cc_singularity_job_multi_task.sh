@@ -12,7 +12,14 @@
 #   - OVERLAYDIR_CONTAINER
 #   - STUFF_TO_TAR - e.g. move the training data to the SLURM_TMPDIR for traning a network
 #   - RESULTS_TO_TAR - the results we seek to move back from the temporary file; e.g. if we train an inference network we don't need to also move the training data back again
+
+# see - https://docs.computecanada.ca/wiki/Using_GPUs_with_Slurm for why we add this
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
+
+
+#################################################
+
+# Divide the "flattened string of commands into ntasks number of commands"
 
 CMD=(${CMD[@]})
 
@@ -32,6 +39,8 @@ if [[ ! n_commands -eq $ntasks ]]; then
     exit 1
 fi
 
+#################################################
+
 module load singularity/3.2
 
 # see eg. https://docs.computecanada.ca/wiki/A_tutorial_on_%27tar%27
@@ -40,10 +49,12 @@ module load singularity/3.2
 echo "Copying singularity to ${SLURM_TMPDIR}"
 time rsync -av "$CONTAINER" "$SLURM_TMPDIR"
 
+# replace any "/"-character or spaces with "_" to use as a name
 stuff_to_tar_suffix=$(tr ' |/' '_' <<< ${STUFF_TO_TAR})
 
 if [ ! -z ${STUFF_TO_TAR+x} ]; then
     if [ ! -f "tar_ball_${stuff_to_tar_suffix}.tar.gz" ]; then
+        # make tarball in $BASERESULTSDIR
         time tar -cf "tar_ball_${stuff_to_tar_suffix}.tar" $STUFF_TO_TAR
     fi
 fi
@@ -113,6 +124,7 @@ else
     RESULTS_TO_TAR="results"
 fi
 
+# replace any "/"-character or spaces with "_" to use as a name
 results_to_tar_suffix=$(tr ' |/' '_' <<< ${RESULTS_TO_TAR})
 
 # make a tarball of the results
