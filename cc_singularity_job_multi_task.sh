@@ -23,10 +23,9 @@ export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 IFS=' ' read -a CMD <<< $CMD #
 
 echo "${CMD[@]}"
-offset=$((${#CMD[@]} / $N))
+offset=$((${#CMD[@]} / $ntasks))
 length=${#CMD[@]}
 CMDs=()
-echo $offset
 for ((i = 0 ; i < $length ; i+=$offset)); do
     tmp=${CMD[@]:$i:$offset}
     CMDs+=("$tmp")
