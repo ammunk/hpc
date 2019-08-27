@@ -26,7 +26,7 @@ time rsync -av "$CONTAINER" "$SLURM_TMPDIR"
 stuff_to_tar_suffix=$(tr ' |/' '_' <<< ${STUFF_TO_TAR})
 
 if [ ! -z ${STUFF_TO_TAR+x} ]; then
-    if [ ! -f "tar_ball_${stuff_to_tar_suffix}.tar.gz" ]; then
+    if [ ! -f "tar_ball_${stuff_to_tar_suffix}.tar" ]; then
         # make tarball in $BASERESULTSDIR
         echo "Creating tarball"
         time tar -cf "tar_ball_${stuff_to_tar_suffix}.tar" $STUFF_TO_TAR
