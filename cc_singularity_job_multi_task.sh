@@ -22,7 +22,6 @@ export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 # Divide the "flattened string of commands into ntasks number of commands"
 IFS=' ' read -a CMD <<< $CMD #
 
-echo "${CMD[@]}"
 offset=$((${#CMD[@]} / $ntasks))
 length=${#CMD[@]}
 CMDs=()
@@ -33,7 +32,6 @@ done
 
 n_commands=${#CMDs[@]}
 
-echo $n_commands $ntasks ${CMDs[@]}
 if [[ ! $n_commands -eq $ntasks ]]; then
     echo "number of tasks not equal to number of commands"
     exit 1
