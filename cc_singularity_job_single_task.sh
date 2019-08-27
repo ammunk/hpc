@@ -65,7 +65,6 @@ fi
 # without those /home and more will be mounted be default
 # using "run" executed the "runscript" specified by the "%runscript"
 # any argument give "CMD" is passed to the runscript
-ls
 singularity run \
             --nv \
             -B "results:/results" \
@@ -84,19 +83,19 @@ if [ ! -z ${RESULTS_TO_TAR+x} ]; then
         mv $file "${file}_${SLURM_JOB_ID}"
     done
 
-    RESULTS_TO_TAR=(${RESULTS_TO_TAR[@]})
-    RESULTS_TO_TAR="${RESULTS_TO_TAR[@]}/%/_${SLURM_JOB_ID}"
+    IFS=' ' read -a RESULTS_TO_TAR <<< $RESULTS_TO_TAR
+    RESULTS_TO_TAR=${RESULTS_TO_TAR[@]}/%/_${SLURM_JOB_ID}
 
 else
     # IF NO RESULTS TO TAR IS SPECIFIED - MAKE A TARBALL OF THE ENTIRE RESULTS DIRECTORY
-    RESULTS_TO_TAR="results"
+    RESULTS_TO_TAR=("results")
 fi
 
 # replace any "/"-character or spaces with "_" to use as a name
-results_to_tar_suffix=$(tr ' |/' '_' <<< ${RESULTS_TO_TAR})
+results_to_tar_suffix=$(tr ' |/' '_' <<< ${RESULTS_TO_TAR[@]})
 
 # make a tarball of the results
-time tar -cf "tar_ball_${results_to_tar_suffix}.tar" $RESULTS_TO_TAR
+time tar -cf "tar_ball_${results_to_tar_suffix}.tar" ${RESULTS_TO_TAR[@]}
 
 # move unpack the tarball to the BASERESULTSDIR
 cd $BASERESULTSDIR

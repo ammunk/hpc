@@ -20,8 +20,7 @@ export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 #################################################
 
 # Divide the "flattened string of commands into ntasks number of commands"
-
-CMD=(${CMD[@]})
+IFS=' ' read -a CMD <<< $CMD #
 
 echo "${CMD[@]}"
 offset=$((${#CMD[@]} / $N))
@@ -30,7 +29,7 @@ CMDs=()
 echo $offset
 for ((i = 0 ; i < $length ; i+=$offset)); do
     tmp=${CMD[@]:$i:$offset}
-    CMDs+=( "$tmp" )
+    CMDs+=("$tmp")
 done
 
 n_commands=${#CMDs[@]}
@@ -119,19 +118,19 @@ if [ ! -z ${RESULTS_TO_TAR+x} ]; then
         mv ${file} "${file}_${SLURM_JOB_ID}"
     done
 
-    RESULTS_TO_TAR=(${RESULTS_TO_TAR[@]})
-    RESULTS_TO_TAR="${RESULTS_TO_TAR[@]}/%/_${SLURM_JOB_ID}"
+    IFS=' ' read -a RESULTS_TO_TAR <<< $RESULTS_TO_TAR
+    RESULTS_TO_TAR=${RESULTS_TO_TAR[@]}/%/_${SLURM_JOB_ID}
 
 else
     # IF NO RESULTS TO TAR IS SPECIFIED - MAKE A TARBALL OF THE ENTIRE RESULTS DIRECTORY
-    RESULTS_TO_TAR="results"
+    RESULTS_TO_TAR=("results")
 fi
 
 # replace any "/"-character or spaces with "_" to use as a name
-results_to_tar_suffix=$(tr ' |/' '_' <<< ${RESULTS_TO_TAR})
+results_to_tar_suffix=$(tr ' |/' '_' <<< ${RESULTS_TO_TAR[@]})
 
 # make a tarball of the results
-time tar -cf "tar_ball_${results_to_tar_suffix}.tar" $RESULTS_TO_TAR
+time tar -cf "tar_ball_${results_to_tar_suffix}.tar" ${RESULTS_TO_TAR[@]}
 
 # move unpack the tarball to the BASERESULTSDIR
 cd $BASERESULTSDIR
