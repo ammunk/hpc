@@ -53,6 +53,7 @@ stuff_to_tar_suffix=$(tr ' |/' '_' <<< ${STUFF_TO_TAR})
 if [ ! -z ${STUFF_TO_TAR+x} ]; then
     if [ ! -f "tar_ball_${stuff_to_tar_suffix}.tar.gz" ]; then
         # make tarball in $BASERESULTSDIR
+        echo "Creating tarball"
         time tar -cf "tar_ball_${stuff_to_tar_suffix}.tar" $STUFF_TO_TAR
     fi
 fi
@@ -61,7 +62,7 @@ fi
 cd "$SLURM_TMPDIR"
 
 if [ ! -z ${STUFF_TO_TAR+x} ]; then
-    echo "Moving tarballs to slurm tmpdir"
+    echo "Moving tarball to slurm tmpdir"
     time tar -xf "${BASERESULTSDIR}/tar_ball_${stuff_to_tar_suffix}.tar"
 fi
 
