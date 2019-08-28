@@ -84,6 +84,7 @@ done
 # make tmp overlay directory otherwise /tmp in container will have very limited disk space
 mkdir "$TMP"
 
+echo $SLURM_NTASKS
 counter=1
 for cmd in "${CMDs[@]}"; do
     # --nv option: bind to system libraries (access to GPUS etc.)
@@ -95,7 +96,7 @@ for cmd in "${CMDs[@]}"; do
     # for more info on srun see - https://docs.computecanada.ca/wiki/Advanced_MPI_scheduling
     # and https://slurm.schedmd.com/gres.html
     # and https://slurm.schedmd.com/srun.html
-    srun -n1 --exclusive --export=ALL echo ${SLURM_TASK_PID} && echo "hello" &
+    srun --ntasks=1 --exclusive --export=ALL echo ${SLURM_TASK_PID} && echo "hello" &
     # srun -n1 --gres=gpu:$GPUS_PER_TASK --exclusive --export=ALL \
     #     singularity run \
     #     --nv \
@@ -128,12 +129,9 @@ if [ ! -z ${RESULTS_TO_TAR+x} ]; then
     TO_TAR_TMP=()
     for i in ${!CMDs[*]}; do
         tmp=(${RESULTS_TO_TAR[@]/%/_${SLURM_JOB_ID}_${i}})
-        echo ${tmp[@]}
         TO_TAR_TMP+=("$tmp")
-        echo ${TO_TAR_TMP[@]}
     done
     RESULTS_TO_TAR=("${TO_TAR_TMP[@]}")
-    echo ${RESULTS_TO_TAR[@]}
 else
     # IF NO RESULTS TO TAR IS SPECIFIED - MAKE A TARBALL OF THE ENTIRE RESULTS DIRECTORY
     RESULTS_TO_TAR=("results")
