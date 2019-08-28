@@ -95,7 +95,7 @@ for cmd in "${CMDs[@]}"; do
     # for more info on srun see - https://docs.computecanada.ca/wiki/Advanced_MPI_scheduling
     # and https://slurm.schedmd.com/gres.html
     # and https://slurm.schedmd.com/srun.html
-    srun -n1 ls && echo "hello" &
+    srun -n1 --exclusive --export=ALL echo ${SLURM_TASK_PID} && echo "hello" &
     # srun -n1 --gres=gpu:$GPUS_PER_TASK --exclusive --export=ALL \
     #     singularity run \
     #     --nv \
@@ -110,7 +110,7 @@ for cmd in "${CMDs[@]}"; do
     #     "$CONTAINER" \
     #    "$cmd" && \
     #     for file in "${RESULTS_TO_TAR}"; \
-    #     do ;\
+    #     do \
     #     mv ${file} "${file}_${SLURM_JOB_ID}_${counter}"; \
     #     done &
     counter=$((counter + 1))
