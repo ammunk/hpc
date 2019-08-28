@@ -32,8 +32,8 @@ done
 
 n_commands=${#CMDs[@]}
 
-if [[ ! $n_commands -eq $ntasks ]]; then
-    echo "number of tasks not equal to number of commands"
+if [[ ! $n_commands -eq $(($ntasks - 1)) ]]; then
+    echo "number of tasks has to be one more than number of commands!!"
     exit 1
 fi
 
