@@ -22,7 +22,7 @@ export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 # Divide the "flattened string of commands into ntasks number of commands"
 IFS=' ' read -a CMD <<< $CMD #
 
-offset=$((${#CMD[@]} / $ntasks))
+offset=$((${#CMD[@]} / $(($ntasks - 1))))
 length=${#CMD[@]}
 CMDs=()
 for ((i = 0 ; i < $length ; i+=$offset)); do
