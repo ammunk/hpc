@@ -117,6 +117,7 @@ for cmd in "${CMDs[@]}"; do
 done
 # wait for each srun to finish
 wait
+ls results/
 
 if [ ! -z ${RESULTS_TO_TAR+x} ]; then
     for file in "${RESULTS_TO_TAR}"; do
@@ -124,7 +125,15 @@ if [ ! -z ${RESULTS_TO_TAR+x} ]; then
     done
 
     IFS=' ' read -a RESULTS_TO_TAR <<< $RESULTS_TO_TAR
-    RESULTS_TO_TAR=(${RESULTS_TO_TAR[@]/%/_${SLURM_JOB_ID}})
+    TO_TAR_TMP=()
+    for i in ${!CMDs[*]}; do
+        tmp=(${RESULTS_TO_TAR[@]/%/_${SLURM_JOB_ID}_${i}})
+        echo ${tmp[@]}
+        TO_TAR_TMP+=("$tmp")
+        echo ${TO_TAR_TMP[@]}
+    done
+    RESULTS_TO_TAR=("${TO_TAR_TMP[@]}")
+    echo ${RESULTS_TO_TAR[@]}
 else
     # IF NO RESULTS TO TAR IS SPECIFIED - MAKE A TARBALL OF THE ENTIRE RESULTS DIRECTORY
     RESULTS_TO_TAR=("results")
