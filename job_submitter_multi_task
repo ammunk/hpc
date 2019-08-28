@@ -32,6 +32,14 @@ CONTAINER_NAME="raven.sif"
 # array of commands send to container - number of commands HAS be the same as ntasks
 CMD=("" "" "" "")
 
+n_commands=${#CMD[@]}
+
+if [[ ! $n_commands -eq $(($ntasks - 1)) ]]; then
+    echo "number of tasks has to be one more than number of commands!!"
+    exit 1
+fi
+
+
 # Directory where this script is called
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 

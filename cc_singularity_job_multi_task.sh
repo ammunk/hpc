@@ -14,7 +14,7 @@
 #   - RESULTS_TO_TAR - the results we seek to move back from the temporary file; e.g. if we train an inference network we don't need to also move the training data back again
 
 # see - https://docs.computecanada.ca/wiki/Using_GPUs_with_Slurm for why we add this
-# export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 
 
 #################################################
@@ -29,13 +29,6 @@ for ((i = 0 ; i < $length ; i+=$offset)); do
     tmp=${CMD[@]:$i:$offset}
     CMDs+=("$tmp")
 done
-
-n_commands=${#CMDs[@]}
-
-if [[ ! $n_commands -eq $(($ntasks - 1)) ]]; then
-    echo "number of tasks has to be one more than number of commands!!"
-    exit 1
-fi
 
 #################################################
 
