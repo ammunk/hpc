@@ -77,14 +77,16 @@ for i in $(seq $n_commands); do
 done
 
 # make overlay directory, which may or may not be used
-mkdir "$OVERLAY"
+for i in $(seq $n_commands); do
+    mkdir "${OVERLAY}_${i}"
+done
 
 # make tmp overlay directory otherwise /tmp in container will have very limited disk space
 mkdir "$TMP"
 
 ls
 counter=1
-for cmd in $CMDs; do
+for cmd in "${CMDs[@]}"; do
     # --nv option: bind to system libraries (access to GPUS etc.)
     # --no-home and --containall mimics the docker container behavior
     # without those /home and more will be mounted be default
@@ -99,7 +101,7 @@ for cmd in $CMDs; do
         -B "results:/results" \
         -B "${DB}_${counter}":/db \
         -B "${TMP}":/tmp \
-        -B "${OVERLAY}":"${OVERLAYDIR_CONTAINER}" \
+        -B "${OVERLAY}_${counter}":"${OVERLAYDIR_CONTAINER}" \
         --cleanenv \
         --no-home \
         --containall \
@@ -118,7 +120,6 @@ if [ ! -z ${RESULTS_TO_TAR+x} ]; then
 
     IFS=' ' read -a RESULTS_TO_TAR <<< $RESULTS_TO_TAR
     RESULTS_TO_TAR=(${RESULTS_TO_TAR[@]/%/_${SLURM_JOB_ID}})
-
 else
     # IF NO RESULTS TO TAR IS SPECIFIED - MAKE A TARBALL OF THE ENTIRE RESULTS DIRECTORY
     RESULTS_TO_TAR=("results")
@@ -132,4 +133,4 @@ time tar -cf "tar_ball_${results_to_tar_suffix}.tar" ${RESULTS_TO_TAR[@]}
 
 # move unpack the tarball to the BASERESULTSDIR
 cd $BASERESULTSDIR
-tar --keep-newer-files -xf "${SLURM_TMPDIR}/tar_ball${results_to_tar_suffix}.tar"
+tar --keep-newer-files -xf "${SLURM_TMPDIR}/tar_ball_${results_to_tar_suffix}.tar"
