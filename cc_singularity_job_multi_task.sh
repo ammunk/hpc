@@ -95,8 +95,8 @@ for cmd in "${CMDs[@]}"; do
     # for more info on srun see - https://docs.computecanada.ca/wiki/Advanced_MPI_scheduling
     # and https://slurm.schedmd.com/gres.html
     # and https://slurm.schedmd.com/srun.html
-    srun ls &
-    # srun --gres=gpu:$GPUS_PER_TASK --exclusive --chdir=${SLURM_TMPDIR} \
+    srun -n1 ls && echo "hello" &
+    # srun -n1 --gres=gpu:$GPUS_PER_TASK --exclusive --export=ALL \
     #     singularity run \
     #     --nv \
     #     -B "results:/results" \
@@ -108,23 +108,27 @@ for cmd in "${CMDs[@]}"; do
     #     --containall \
     #     --writable-tmpfs \
     #     "$CONTAINER" \
-    #    "$cmd"
+    #    "$cmd" && \
+    #     for file in "${RESULTS_TO_TAR}"; \
+    #     do ;\
+    #     mv ${file} "${file}_${SLURM_JOB_ID}_${counter}"; \
+    #     done &
     counter=$((counter + 1))
 done
 # wait for each srun to finish
 wait
 
-# if [ ! -z ${RESULTS_TO_TAR+x} ]; then
-#     for file in "${RESULTS_TO_TAR}"; do
-#         mv ${file} "${file}_${SLURM_JOB_ID}"
-#     done
+if [ ! -z ${RESULTS_TO_TAR+x} ]; then
+    for file in "${RESULTS_TO_TAR}"; do
+        mv ${file} "${file}_${SLURM_JOB_ID}"
+    done
 
-#     IFS=' ' read -a RESULTS_TO_TAR <<< $RESULTS_TO_TAR
-#     RESULTS_TO_TAR=(${RESULTS_TO_TAR[@]/%/_${SLURM_JOB_ID}})
-# else
-#     # IF NO RESULTS TO TAR IS SPECIFIED - MAKE A TARBALL OF THE ENTIRE RESULTS DIRECTORY
-#     RESULTS_TO_TAR=("results")
-# fi
+    IFS=' ' read -a RESULTS_TO_TAR <<< $RESULTS_TO_TAR
+    RESULTS_TO_TAR=(${RESULTS_TO_TAR[@]/%/_${SLURM_JOB_ID}})
+else
+    # IF NO RESULTS TO TAR IS SPECIFIED - MAKE A TARBALL OF THE ENTIRE RESULTS DIRECTORY
+    RESULTS_TO_TAR=("results")
+fi
 
 # # replace any "/"-character or spaces with "_" to use as a name
 # results_to_tar_suffix=$(tr ' |/' '_' <<< ${RESULTS_TO_TAR[@]})
