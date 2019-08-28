@@ -45,7 +45,7 @@ module load singularity/3.2
 
 # move data to temporary SLURM DIR which is much faster for I/O
 echo "Copying singularity to ${SLURM_TMPDIR}"
-time rsync -av "$CONTAINER" "$SLURM_TMPDIR"
+#time rsync -av "$CONTAINER" "$SLURM_TMPDIR"
 
 # replace any "/"-character or spaces with "_" to use as a name
 stuff_to_tar_suffix=$(tr ' |/' '_' <<< ${STUFF_TO_TAR})
@@ -61,10 +61,10 @@ fi
 # go to temporary directory
 cd "$SLURM_TMPDIR"
 
-if [ ! -z ${STUFF_TO_TAR+x} ]; then
-    echo "Moving tarball to slurm tmpdir"
-    time tar -xf "${BASERESULTSDIR}/tar_ball_${stuff_to_tar_suffix}.tar"
-fi
+# if [ ! -z ${STUFF_TO_TAR+x} ]; then
+#     echo "Moving tarball to slurm tmpdir"
+#     time tar -xf "${BASERESULTSDIR}/tar_ball_${stuff_to_tar_suffix}.tar"
+# fi
 
 DB="db_${SLURM_JOB_ID}"
 OVERLAY="overlay_${SLURM_JOB_ID}"
@@ -84,7 +84,6 @@ done
 # make tmp overlay directory otherwise /tmp in container will have very limited disk space
 mkdir "$TMP"
 
-ls
 counter=1
 for cmd in "${CMDs[@]}"; do
     # --nv option: bind to system libraries (access to GPUS etc.)
@@ -96,41 +95,44 @@ for cmd in "${CMDs[@]}"; do
     # for more info on srun see - https://docs.computecanada.ca/wiki/Advanced_MPI_scheduling
     # and https://slurm.schedmd.com/gres.html
     # and https://slurm.schedmd.com/srun.html
-    srun --gres=gpu:$GPUS_PER_TASK --exclusive singularity run \
-        --nv \
-        -B "results:/results" \
-        -B "${DB}_${counter}":/db \
-        -B "${TMP}":/tmp \
-        -B "${OVERLAY}_${counter}":"${OVERLAYDIR_CONTAINER}" \
-        --cleanenv \
-        --no-home \
-        --containall \
-        --writable-tmpfs \
-        "$CONTAINER" \
-        "$cmd"
+    echo $cmd $counter
+    srun ls
+    # srun --gres=gpu:$GPUS_PER_TASK --exclusive --chdir=${SLURM_TMPDIR} \
+    #     singularity run \
+    #     --nv \
+    #     -B "results:/results" \
+    #     -B "${DB}_${counter}":/db \
+    #     -B "${TMP}":/tmp \
+    #     -B "${OVERLAY}_${counter}":"${OVERLAYDIR_CONTAINER}" \
+    #     --cleanenv \
+    #     --no-home \
+    #     --containall \
+    #     --writable-tmpfs \
+    #     "$CONTAINER" \
+    #    "$cmd"
     counter=$((counter + 1))
 done
 # wait for each srun to finish
 wait
 
-if [ ! -z ${RESULTS_TO_TAR+x} ]; then
-    for file in "${RESULTS_TO_TAR}"; do
-        mv ${file} "${file}_${SLURM_JOB_ID}"
-    done
+# if [ ! -z ${RESULTS_TO_TAR+x} ]; then
+#     for file in "${RESULTS_TO_TAR}"; do
+#         mv ${file} "${file}_${SLURM_JOB_ID}"
+#     done
 
-    IFS=' ' read -a RESULTS_TO_TAR <<< $RESULTS_TO_TAR
-    RESULTS_TO_TAR=(${RESULTS_TO_TAR[@]/%/_${SLURM_JOB_ID}})
-else
-    # IF NO RESULTS TO TAR IS SPECIFIED - MAKE A TARBALL OF THE ENTIRE RESULTS DIRECTORY
-    RESULTS_TO_TAR=("results")
-fi
+#     IFS=' ' read -a RESULTS_TO_TAR <<< $RESULTS_TO_TAR
+#     RESULTS_TO_TAR=(${RESULTS_TO_TAR[@]/%/_${SLURM_JOB_ID}})
+# else
+#     # IF NO RESULTS TO TAR IS SPECIFIED - MAKE A TARBALL OF THE ENTIRE RESULTS DIRECTORY
+#     RESULTS_TO_TAR=("results")
+# fi
 
-# replace any "/"-character or spaces with "_" to use as a name
-results_to_tar_suffix=$(tr ' |/' '_' <<< ${RESULTS_TO_TAR[@]})
+# # replace any "/"-character or spaces with "_" to use as a name
+# results_to_tar_suffix=$(tr ' |/' '_' <<< ${RESULTS_TO_TAR[@]})
 
-# make a tarball of the results
-time tar -cf "tar_ball_${results_to_tar_suffix}.tar" ${RESULTS_TO_TAR[@]}
+# # make a tarball of the results
+# time tar -cf "tar_ball_${results_to_tar_suffix}.tar" ${RESULTS_TO_TAR[@]}
 
-# move unpack the tarball to the BASERESULTSDIR
-cd $BASERESULTSDIR
-tar --keep-newer-files -xf "${SLURM_TMPDIR}/tar_ball_${results_to_tar_suffix}.tar"
+# # move unpack the tarball to the BASERESULTSDIR
+# cd $BASERESULTSDIR
+# tar --keep-newer-files -xf "${SLURM_TMPDIR}/tar_ball_${results_to_tar_suffix}.tar"
