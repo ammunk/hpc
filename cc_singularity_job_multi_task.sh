@@ -89,7 +89,7 @@ for cmd in "${CMDs[@]}"; do
     # for more info on srun see - https://docs.computecanada.ca/wiki/Advanced_MPI_scheduling
     # and https://slurm.schedmd.com/gres.html
     # and https://slurm.schedmd.com/srun.html
-    srun --ntasks=1 sleep 10 &
+    srun --ntasks=1 --exclusive -N 1 sleep 10 &
     # srun -n1 --gres=gpu:$GPUS_PER_TASK --exclusive --export=ALL \
     #     singularity run \
     #     --nv \
