@@ -55,10 +55,10 @@ fi
 # go to temporary directory
 cd "$SLURM_TMPDIR"
 
-# if [ ! -z ${STUFF_TO_TAR+x} ]; then
-#     echo "Moving tarball to slurm tmpdir"
-#     time tar -xf "${BASERESULTSDIR}/tar_ball_${stuff_to_tar_suffix}.tar"
-# fi
+if [ ! -z ${STUFF_TO_TAR+x} ]; then
+    echo "Moving tarball to slurm tmpdir"
+    time tar -xf "${BASERESULTSDIR}/tar_ball_${stuff_to_tar_suffix}.tar"
+fi
 
 DB="db_${SLURM_JOB_ID}"
 OVERLAY="overlay_${SLURM_JOB_ID}"
@@ -78,6 +78,7 @@ done
 # make tmp overlay directory otherwise /tmp in container will have very limited disk space
 mkdir "$TMP"
 
+mem_per_task=$((${SLURM_MEM_PER_NODE} / ${SLURM_NTASKS}))
 counter=1
 for cmd in "${CMDs[@]}"; do
     # --nv option: bind to system libraries (access to GPUS etc.)
@@ -89,24 +90,23 @@ for cmd in "${CMDs[@]}"; do
     # for more info on srun see - https://docs.computecanada.ca/wiki/Advanced_MPI_scheduling
     # and https://slurm.schedmd.com/gres.html
     # and https://slurm.schedmd.com/srun.html
-    srun --ntasks=1 -c ${SLURM_CPUS_PER_TASK} --exclusive -N 1 sleep 10 &
-    # srun -n1 --gres=gpu:$GPUS_PER_TASK --exclusive --export=ALL \
-    #     singularity run \
-    #     --nv \
-    #     -B "results:/results" \
-    #     -B "${DB}_${counter}":/db \
-    #     -B "${TMP}":/tmp \
-    #     -B "${OVERLAY}_${counter}":"${OVERLAYDIR_CONTAINER}" \
-    #     --cleanenv \
-    #     --no-home \
-    #     --containall \
-    #     --writable-tmpfs \
-    #     "$CONTAINER" \
-    #    "$cmd" && \
-    #     for file in "${RESULTS_TO_TAR}"; \
-    #     do \
-    #     mv ${file} "${file}_${SLURM_JOB_ID}_${counter}"; \
-    #     done &
+    srun -n1 --gres=gpu:$GPUS_PER_TASK --exclusive --mem=${mem_per_task} --export=ALL \
+        singularity run \
+        --nv \
+        -B "results:/results" \
+        -B "${DB}_${counter}":/db \
+        -B "${TMP}":/tmp \
+        -B "${OVERLAY}_${counter}":"${OVERLAYDIR_CONTAINER}" \
+        --cleanenv \
+        --no-home \
+        --containall \
+        --writable-tmpfs \
+        "$CONTAINER" \
+       "$cmd" && \
+        for file in "${RESULTS_TO_TAR}"; \
+        do \
+        mv ${file} "${file}_${SLURM_JOB_ID}_${counter}"; \
+        done &
     counter=$((counter + 1))
 done
 # wait for each srun to finish
