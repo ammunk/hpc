@@ -84,7 +84,6 @@ done
 # make tmp overlay directory otherwise /tmp in container will have very limited disk space
 mkdir "$TMP"
 
-echo $SLURM_NTASKS
 counter=1
 for cmd in "${CMDs[@]}"; do
     # --nv option: bind to system libraries (access to GPUS etc.)
@@ -96,7 +95,7 @@ for cmd in "${CMDs[@]}"; do
     # for more info on srun see - https://docs.computecanada.ca/wiki/Advanced_MPI_scheduling
     # and https://slurm.schedmd.com/gres.html
     # and https://slurm.schedmd.com/srun.html
-    srun --ntasks=1 --exclusive --export=ALL sleep 10 &
+    srun --ntasks=1 --exclusive sleep 10 &
     # srun -n1 --gres=gpu:$GPUS_PER_TASK --exclusive --export=ALL \
     #     singularity run \
     #     --nv \
