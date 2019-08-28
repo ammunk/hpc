@@ -19,7 +19,7 @@ CPUS_PER_TASK=6 # should be no more than 6 per GPU! -- SEE COMPUTE CANADA
 MEM="0" # G/M is Gigabyte/Megabyte - 0 means request all memory
 TIME="01:00:00" # <HH:MM:MM>
 GPUS=4
-ntasks=4
+ntasks=5
 GPUS_PER_TASK=1
 
 # an overlay where the container need write permissions
