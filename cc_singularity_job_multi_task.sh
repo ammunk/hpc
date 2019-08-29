@@ -30,7 +30,7 @@ for ((i = 0 ; i < $length ; i+=$offset)); do
     CMDs+=("$tmp")
 done
 
-n_commands=${#CMDS[@]}
+n_commands=${#CMDs[@]}
 echo $n_commands
 #################################################
 
