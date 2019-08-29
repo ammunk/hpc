@@ -31,6 +31,7 @@ for ((i = 0 ; i < $length ; i+=$offset)); do
 done
 
 n_commands=${#CMDS[@]}
+echo $n_commands
 #################################################
 
 module load singularity/3.2
@@ -91,7 +92,7 @@ for cmd in "${CMDs[@]}"; do
     # and https://slurm.schedmd.com/gres.html
     # and https://slurm.schedmd.com/srun.html
     srun -n1 --gres=gpu:$GPUS_PER_TASK --exclusive --mem=${mem_per_task} \
-        singularity run \
+        ls && singularity run \
         --nv \
         -B "results:/results" \
         -B "${DB}_${counter}":/db \
