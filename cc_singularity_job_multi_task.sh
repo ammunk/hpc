@@ -76,7 +76,9 @@ for i in $(seq $n_commands); do
 done
 
 # make tmp overlay directory otherwise /tmp in container will have very limited disk space
-mkdir "$TMP"
+for i in $(seq $n_commands); do
+    mkdir "${TMP}_${i}"
+done
 
 mem_per_task=$((${SLURM_MEM_PER_NODE} / ${SLURM_NTASKS}))
 counter=1
@@ -91,11 +93,11 @@ for cmd in "${CMDs[@]}"; do
     # and https://slurm.schedmd.com/gres.html
     # and https://slurm.schedmd.com/srun.html
     srun -n1 --gres=gpu:$GPUS_PER_TASK --exclusive --mem=${mem_per_task} \
-        ls && echo "${counter} ${DB} ${OVERLAY} ${TMP}" && singularity run \
+        ls && echo "${counter} ${DB} ${OVERLAY} ${OVERLAYDIR_CONTAINER} ${TMP}" && singularity run \
         --nv \
         -B "results:/results" \
         -B "${DB}_${counter}":/db \
-        -B "${TMP}":/tmp \
+        -B "${TMP}_{counter}":/tmp \
         -B "${OVERLAY}_${counter}":"${OVERLAYDIR_CONTAINER}" \
         --cleanenv \
         --no-home \
