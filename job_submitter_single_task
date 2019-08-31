@@ -35,6 +35,9 @@ CONTAINER_NAME="raven.sif"
 # command send to container
 CMD=""
 
+seed=$(date +%s%N) # get date down to nanoseconds
+CMD="${CMD} seed=${seed}"
+
 # Directory where this script is called
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 

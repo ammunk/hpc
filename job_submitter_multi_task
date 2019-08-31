@@ -30,7 +30,15 @@ OVERLAYDIR_CONTAINER="/overlay"
 CONTAINER_NAME="raven.sif"
 
 # array of commands send to container - number of commands HAS be the same as ntasks
-CMD=("" "" "" "")
+CMD_BASE=""
+
+CMD=()
+for i in $(seq $ntasks); do
+    seed=$(date +%s%N) # get date down to nanoseconds
+    tmp="${CMD_BASE} seed=${seed}"
+    CMD+=("$tmp")
+    sleep 0.01
+done
 
 n_commands=${#CMD[@]}
 
