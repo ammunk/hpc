@@ -103,40 +103,50 @@ for cmd in "${CMDs[@]}"; do
         --contain \
         --writable-tmpfs \
         "$CONTAINER" \
-       "$cmd" && \
-        for file in "${RESULTS_TO_TAR}"; \
-        do \
-        mv ${file} "${file}_${SLURM_JOB_ID}_${counter}"; \
-        done &
+       "$cmd" &
     counter=$((counter + 1))
 done
 # wait for each srun to finish
 wait
-ls results/
 
-if [ ! -z ${RESULTS_TO_TAR+x} ]; then
-    for file in "${RESULTS_TO_TAR}"; do
-        mv ${file} "${file}_${SLURM_JOB_ID}"
-    done
+######################################################################
 
-    IFS=' ' read -a RESULTS_TO_TAR <<< $RESULTS_TO_TAR
-    TO_TAR_TMP=()
-    for i in ${!CMDs[*]}; do
-        tmp=(${RESULTS_TO_TAR[@]/%/_${SLURM_JOB_ID}_${i}})
-        TO_TAR_TMP+=("$tmp")
-    done
-    RESULTS_TO_TAR=("${TO_TAR_TMP[@]}")
-else
+# MAKE SURE THE RESULTS SAVED HAVE UNIQUE NAMES EITHER USING JOB ID AND
+# OR SOME OTHER WAY - !!!! OTHERWISE STUFF WILL BE OVERWRITEN !!!!
+
+######################################################################
+
+if [ -z ${RESULTS_TO_TAR+x} ]; then
     # IF NO RESULTS TO TAR IS SPECIFIED - MAKE A TARBALL OF THE ENTIRE RESULTS DIRECTORY
     RESULTS_TO_TAR=("results")
+else
+    # if variable is provided make into an array
+    IFS=' ' read -a RESULTS_TO_TAR <<< $RESULTS_TO_TAR
 fi
 
-# # replace any "/"-character or spaces with "_" to use as a name
-# results_to_tar_suffix=$(tr ' |/' '_' <<< ${RESULTS_TO_TAR[@]})
+# replace any "/"-character or spaces with "_" to use as a name
+results_to_tar_suffix=$(tr ' |/' '_' <<< ${RESULTS_TO_TAR[@]})
 
-# # make a tarball of the results
-# time tar -cf "tar_ball_${results_to_tar_suffix}.tar" ${RESULTS_TO_TAR[@]}
+# make a tarball of the results
+time tar -cf "tar_ball_${results_to_tar_suffix}.tar" ${RESULTS_TO_TAR[@]}
 
-# # move unpack the tarball to the BASERESULTSDIR
-# cd $BASERESULTSDIR
-# tar --keep-newer-files -xf "${SLURM_TMPDIR}/tar_ball_${results_to_tar_suffix}.tar"
+# move unpack the tarball to the BASERESULTSDIR
+cd $BASERESULTSDIR
+tar --keep-newer-files -xf "${SLURM_TMPDIR}/tar_ball_${results_to_tar_suffix}.tar"
+if [ -z ${RESULTS_TO_TAR+x} ]; then
+    # IF NO RESULTS TO TAR IS SPECIFIED - MAKE A TARBALL OF THE ENTIRE RESULTS DIRECTORY
+    RESULTS_TO_TAR=("results")
+else
+    # if variable is provided make into an array
+    IFS=' ' read -a RESULTS_TO_TAR <<< $RESULTS_TO_TAR
+fi
+
+# replace any "/"-character or spaces with "_" to use as a name
+results_to_tar_suffix=$(tr ' |/' '_' <<< ${RESULTS_TO_TAR[@]})
+
+# make a tarball of the results
+time tar -cf "tar_ball_${results_to_tar_suffix}.tar" ${RESULTS_TO_TAR[@]}
+
+# move unpack the tarball to the BASERESULTSDIR
+cd $BASERESULTSDIR
+tar --keep-newer-files -xf "${SLURM_TMPDIR}/tar_ball_${results_to_tar_suffix}.tar"

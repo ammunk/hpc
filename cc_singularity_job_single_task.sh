@@ -78,16 +78,19 @@ singularity run \
             "$CONTAINER" \
             "$CMD"
 
-if [ ! -z ${RESULTS_TO_TAR+x} ]; then
-    for file in "${RESULTS_TO_TAR}"; do
-        mv $file "${file}_${SLURM_JOB_ID}"
-    done
+######################################################################
 
-    IFS=' ' read -a RESULTS_TO_TAR <<< $RESULTS_TO_TAR
-    RESULTS_TO_TAR=(${RESULTS_TO_TAR[@]/%/_${SLURM_JOB_ID}})
-else
+# MAKE SURE THE RESULTS SAVED HAVE UNIQUE NAMES EITHER USING JOB ID AND
+# OR SOME OTHER WAY - !!!! OTHERWISE STUFF WILL BE OVERWRITEN !!!!
+
+######################################################################
+
+if [ -z ${RESULTS_TO_TAR+x} ]; then
     # IF NO RESULTS TO TAR IS SPECIFIED - MAKE A TARBALL OF THE ENTIRE RESULTS DIRECTORY
     RESULTS_TO_TAR=("results")
+else
+    # if variable is provided make into an array
+    IFS=' ' read -a RESULTS_TO_TAR <<< $RESULTS_TO_TAR
 fi
 
 # replace any "/"-character or spaces with "_" to use as a name
