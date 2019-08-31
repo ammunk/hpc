@@ -93,6 +93,8 @@ else
     srun_options = "-n1 --exclusive --mem=${mem_per_task}"
 fi
 
+IFS=' ' read -a srun_options <<< "$srun_options"
+
 counter=1
 for cmd in "${CMDs[@]}"; do
     # --nv option: bind to system libraries (access to GPUS etc.)
@@ -104,7 +106,7 @@ for cmd in "${CMDs[@]}"; do
     # for more info on srun see - https://docs.computecanada.ca/wiki/Advanced_MPI_scheduling
     # and https://slurm.schedmd.com/gres.html
     # and https://slurm.schedmd.com/srun.html
-    srun "${srun_options[@]}" \
+    srun ${srun_options[@]} \
         singularity run \
         --nv \
         -B "results:/results" \
