@@ -99,9 +99,8 @@ for cmd in "${CMDs[@]}"; do
         -B "${DB}_${counter}":/db \
         -B "${TMP}_{counter}":/tmp \
         -B "${OVERLAY}_${counter}":"${OVERLAYDIR_CONTAINER}" \
-        --cleanenv \
         --no-home \
-        --containall \
+        --contain \
         --writable-tmpfs \
         "$CONTAINER" \
        "$cmd" && \
