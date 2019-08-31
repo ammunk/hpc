@@ -44,7 +44,7 @@ time rsync -av "$CONTAINER" "$SLURM_TMPDIR"
 # replace any "/"-character or spaces with "_" to use as a name
 stuff_to_tar_suffix=$(tr ' |/' '_' <<< ${STUFF_TO_TAR})
 
-if [ ! -z ${STUFF_TO_TAR+x} ]; then
+if [ ! -z ${STUFF_TO_TAR} ]; then
     if [ ! -f "tar_ball_${stuff_to_tar_suffix}.tar" ]; then
         # make tarball in $BASERESULTSDIR
         echo "Creating tarball"
@@ -55,7 +55,7 @@ fi
 # go to temporary directory
 cd "$SLURM_TMPDIR"
 
-if [ ! -z ${STUFF_TO_TAR+x} ]; then
+if [ ! -z ${STUFF_TO_TAR} ]; then
     echo "Moving tarball to slurm tmpdir"
     time tar -xf "${BASERESULTSDIR}/tar_ball_${stuff_to_tar_suffix}.tar"
 fi
@@ -65,9 +65,9 @@ OVERLAY="overlay_${SLURM_JOB_ID}"
 TMP="tmp_${SLURM_JOB_ID}"
 
 # ensure resultsdir exists
-if [ ! -d results ]; do
+if [ ! -d results ]; then
     mkdir results
-done
+fi
 
 # make directory that singularity can mount to and use to setup a database
 # such as postgresql or a monogdb etc. make a different DB for each task
@@ -128,7 +128,7 @@ wait
 
 ######################################################################
 
-if [ -z ${RESULTS_TO_TAR+x} ]; then
+if [ -z ${RESULTS_TO_TAR} ]; then
     # IF NO RESULTS TO TAR IS SPECIFIED - MAKE A TARBALL OF THE ENTIRE RESULTS DIRECTORY
     RESULTS_TO_TAR=("results")
 else
@@ -145,7 +145,7 @@ time tar -cf "tar_ball_${results_to_tar_suffix}.tar" ${RESULTS_TO_TAR[@]}
 # move unpack the tarball to the BASERESULTSDIR
 cd $BASERESULTSDIR
 tar --keep-newer-files -xf "${SLURM_TMPDIR}/tar_ball_${results_to_tar_suffix}.tar"
-if [ -z ${RESULTS_TO_TAR+x} ]; then
+if [ -z ${RESULTS_TO_TAR} ]; then
     # IF NO RESULTS TO TAR IS SPECIFIED - MAKE A TARBALL OF THE ENTIRE RESULTS DIRECTORY
     RESULTS_TO_TAR=("results")
 else

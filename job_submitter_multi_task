@@ -52,7 +52,7 @@ STUFF_TO_TAR=""
 RESULTS_TO_TAR=""
 
 # set base directory names to store results from jobs (specific directory will be given in the job script)
-if [ ! -z ${SCRATCH+x} ]; then
+if [ ! -z ${SCRATCH} ]; then
 
     # resolve scratch location
     if [ -d ${SCRATCH}/amunk_docker ]; then # we are on local hpc
