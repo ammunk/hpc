@@ -99,7 +99,7 @@ GPUS_PER_TASK=${GPUS_PER_TASK}"
             "--gres=gpu:${GPUS}" \ # !!! if no GPUS are needed then DELETE this !!!
             --chdir="${BASERESULTSDIR}" \
             -o "${BASERESULTSDIR}/hpc_output/${EXP_NAME}_%j.out" \
-            "--export=ALL,CMD=${CMD[@]},${VARIABLES},EXP_NAME=${EXP_NAME},USE_MONGO=FALSE" \
+            "--export=ALL,CMD=${CMD[*]},${VARIABLES},EXP_NAME=${EXP_NAME},USE_MONGO=FALSE" \
             ~/hpc/cc_singularity_job_multi_task.sh
         sleep 1 # sleep so that we do not overwhelm the scheduler (SEE e.g. compute canada's website)
     done
