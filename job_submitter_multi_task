@@ -89,7 +89,7 @@ GPUS_PER_TASK=${GPUS_PER_TASK}"
             "--ntasks=${ntasks}" \
             "--cpus-per-task=${CPUS_PER_TASK}" \
             "--mem=${MEM}" \
-            "--gres=gpu:${GPUS}" \
+            "--gres=gpu:${GPUS}" \ # !!! if no GPUS are needed then DELETE this !!!
             --chdir="${BASERESULTSDIR}" \
             -o "${BASERESULTSDIR}/hpc_output/${EXP_NAME}_%j.out" \
             "--export=ALL,${VARIABLES},EXP_NAME=${EXP_NAME},USE_MONGO=FALSE" \
