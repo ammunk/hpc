@@ -64,6 +64,11 @@ DB="db_${SLURM_JOB_ID}"
 OVERLAY="overlay_${SLURM_JOB_ID}"
 TMP="tmp_${SLURM_JOB_ID}"
 
+# ensure resultsdir exists
+if [ ! -d results ]; do
+    mkdir results
+done
+
 # make directory that singularity can mount to and use to setup a database
 # such as postgresql or a monogdb etc. make a different DB for each task
 for i in $(seq $n_commands); do
@@ -81,6 +86,13 @@ for i in $(seq $n_commands); do
 done
 
 mem_per_task=$((${SLURM_MEM_PER_NODE} / ${SLURM_NTASKS}))
+
+if [[ $GPUS_PER_TASK $ -ge 1 ]]; then
+    srun_options = "-n1 --gres=gpu:${GPUS_PER_TASK} --exclusive --mem=${mem_per_task}"
+else
+    srun_options = "-n1 --exclusive --mem=${mem_per_task}"
+fi
+
 counter=1
 for cmd in "${CMDs[@]}"; do
     # --nv option: bind to system libraries (access to GPUS etc.)
@@ -92,8 +104,8 @@ for cmd in "${CMDs[@]}"; do
     # for more info on srun see - https://docs.computecanada.ca/wiki/Advanced_MPI_scheduling
     # and https://slurm.schedmd.com/gres.html
     # and https://slurm.schedmd.com/srun.html
-    srun -n1 --gres=gpu:$GPUS_PER_TASK --exclusive --mem=${mem_per_task} \
-        ls && echo "${counter} ${DB} ${OVERLAY} ${OVERLAYDIR_CONTAINER} ${TMP}" && singularity run \
+    srun $srun_options \
+        singularity run \
         --nv \
         -B "results:/results" \
         -B "${DB}_${counter}":/db \
