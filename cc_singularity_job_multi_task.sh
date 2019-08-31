@@ -87,7 +87,7 @@ done
 
 mem_per_task=$((${SLURM_MEM_PER_NODE} / ${SLURM_NTASKS}))
 
-if [[ $GPUS_PER_TASK $ -ge 1 ]]; then
+if [[ $GPUS_PER_TASK -ge 1 ]]; then
     srun_options = "-n1 --gres=gpu:${GPUS_PER_TASK} --exclusive --mem=${mem_per_task}"
 else
     srun_options = "-n1 --exclusive --mem=${mem_per_task}"
