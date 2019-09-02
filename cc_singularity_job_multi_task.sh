@@ -119,6 +119,7 @@ for cmd in "${CMDs[@]}"; do
         "$CONTAINER" \
        "$cmd" &
     counter=$((counter + 1))
+    sleep 1
 done
 # wait for each srun to finish
 wait
@@ -142,8 +143,8 @@ fi
 results_to_tar_suffix=$(tr ' |/' '_' <<< ${RESULTS_TO_TAR[@]})
 
 # make a tarball of the results
-time tar -cf "tar_ball_${results_to_tar_suffix}.tar" ${RESULTS_TO_TAR[@]}
+time tar -cf "tar_ball_${results_to_tar_suffix}_${SLURM_JOBID}.tar" ${RESULTS_TO_TAR[@]}
 
 # move unpack the tarball to the BASERESULTSDIR
 cd $BASERESULTSDIR
-tar --keep-newer-files -xf "${SLURM_TMPDIR}/tar_ball_${results_to_tar_suffix}.tar"
+tar --keep-newer-files -xf "${SLURM_TMPDIR}/tar_ball_${results_to_tar_suffix}_${SLURM_JOBID}.tar"
