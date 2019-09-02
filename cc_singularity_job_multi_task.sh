@@ -106,18 +106,18 @@ for cmd in "${CMDs[@]}"; do
     # for more info on srun see - https://docs.computecanada.ca/wiki/Advanced_MPI_scheduling
     # and https://slurm.schedmd.com/gres.html
     # and https://slurm.schedmd.com/srun.html
-    srun ${srun_options[@]} \
-        singularity run \
+    srun ${srun_options[@]} \ bash -c \
+        "singularity run \
         --nv \
-        -B "results:/results" \
-        -B "${DB}_${counter}":/db \
-        -B "${TMP}_{counter}":/tmp \
-        -B "${OVERLAY}_${counter}":"${OVERLAYDIR_CONTAINER}" \
+        -B results:/results \
+        -B ${DB}_${counter}:/db \
+        -B ${TMP}_{counter}:/tmp \
+        -B ${OVERLAY}_${counter}:${OVERLAYDIR_CONTAINER} \
         --no-home \
         --contain \
         --writable-tmpfs \
-        "$CONTAINER" \
-       "$cmd" &
+        ${CONTAINER} \
+       ${cmd}" &
     counter=$((counter + 1))
     sleep 1
 done
@@ -143,8 +143,8 @@ fi
 results_to_tar_suffix=$(tr ' |/' '_' <<< ${RESULTS_TO_TAR[@]})
 
 # make a tarball of the results
-time tar -cf "tar_ball_${results_to_tar_suffix}_${SLURM_JOBID}.tar" ${RESULTS_TO_TAR[@]}
+time tar -cf "tar_ball_${results_to_tar_suffix}_${SLURM_JOB_ID}.tar" ${RESULTS_TO_TAR[@]}
 
 # move unpack the tarball to the BASERESULTSDIR
 cd $BASERESULTSDIR
-tar --keep-newer-files -xf "${SLURM_TMPDIR}/tar_ball_${results_to_tar_suffix}_${SLURM_JOBID}.tar"
+tar --keep-newer-files -xf "${SLURM_TMPDIR}/tar_ball_${results_to_tar_suffix}_${SLURM_JOB_ID}.tar"
