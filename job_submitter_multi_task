@@ -72,7 +72,7 @@ GPUS_PER_TASK=${GPUS_PER_TASK}"
     do
         CMD=()
         for i in $(seq $ntasks); do
-            seed=$(date +%s%N) # get date down to nanoseconds
+            seed=$(python -c "import random; print random.randint(0,2**32-1)")
             tmp="${CMD_BASE} seed=${seed}"
             CMD+=("$tmp")
             sleep 0.01
