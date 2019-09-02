@@ -106,7 +106,7 @@ for cmd in "${CMDs[@]}"; do
     # for more info on srun see - https://docs.computecanada.ca/wiki/Advanced_MPI_scheduling
     # and https://slurm.schedmd.com/gres.html
     # and https://slurm.schedmd.com/srun.html
-    srun ${srun_options[@]} \ bash -c \
+    srun ${srun_options[@]} bash -c \
         "singularity run \
         --nv \
         -B results:/results \
