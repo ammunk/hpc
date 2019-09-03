@@ -54,7 +54,6 @@ fi
 
 # go to temporary directory
 cd "$SLURM_TMPDIR"
-hostname -I
 
 if [ ! -z ${STUFF_TO_TAR} ]; then
     echo "Moving tarball to slurm tmpdir"
