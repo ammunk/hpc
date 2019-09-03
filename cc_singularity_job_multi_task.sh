@@ -96,6 +96,7 @@ fi
 IFS=' ' read -a srun_options <<< "$srun_options"
 
 counter=1
+echo $mem_per_task
 for cmd in "${CMDs[@]}"; do
     # --nv option: bind to system libraries (access to GPUS etc.)
     # --no-home and --containall mimics the docker container behavior
@@ -106,7 +107,7 @@ for cmd in "${CMDs[@]}"; do
     # for more info on srun see - https://docs.computecanada.ca/wiki/Advanced_MPI_scheduling
     # and https://slurm.schedmd.com/gres.html
     # and https://slurm.schedmd.com/srun.html
-    srun -n1 -N1 --exclusive --mem=$mem_per_task --cpu-bind=cores bash -c \
+    srun -n1 -N1 --mem=$mem_per_task --cpu-bind=cores bash -c \
         "singularity run \
         --nv \
         -B results:/results \
