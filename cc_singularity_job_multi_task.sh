@@ -88,9 +88,9 @@ done
 mem_per_task=$((${SLURM_MEM_PER_NODE} / ${SLURM_NTASKS}))
 
 if [[ $GPUS_PER_TASK -ge 1 ]]; then
-    srun_options="-n1 -N1 --gres=gpu:${GPUS_PER_TASK} --exclusive --mem=${mem_per_task} --cpu-bind=none"
+    srun_options="-n1 -N1 --gres=gpu:${GPUS_PER_TASK} --mem=${mem_per_task} --cpu-bind=none"
 else
-    srun_options="-n1 -N1 --exclusive --mem=${mem_per_task} --cpu-bind=none"
+    srun_options="-n1 -N1 --mem=${mem_per_task} --cpu-bind=none"
 fi
 
 IFS=' ' read -a srun_options <<< "$srun_options"
