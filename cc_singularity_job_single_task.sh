@@ -102,8 +102,8 @@ fi
 results_to_tar_suffix=$(tr ' |/' '_' <<< ${RESULTS_TO_TAR[@]})
 
 # make a tarball of the results
-time tar -cf "tar_ball_${results_to_tar_suffix_${SLURM_JOB_ID}}.tar" ${RESULTS_TO_TAR[@]}
+time tar -cf "tar_ball_${results_to_tar_suffix}_${SLURM_JOB_ID}.tar" ${RESULTS_TO_TAR[@]}
 
 # move unpack the tarball to the BASERESULTSDIR
 cd $BASERESULTSDIR
-tar --keep-newer-files -xf "${SLURM_TMPDIR}/tar_ball_${results_to_tar_suffix_${SLURM_JOB_ID}}.tar"
+tar --keep-newer-files -xf "${SLURM_TMPDIR}/tar_ball_${results_to_tar_suffix}_${SLURM_JOB_ID}.tar"
