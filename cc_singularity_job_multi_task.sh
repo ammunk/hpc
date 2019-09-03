@@ -90,13 +90,12 @@ mem_per_task=$((${SLURM_MEM_PER_NODE} / ${SLURM_NTASKS}))
 if [[ $GPUS_PER_TASK -ge 1 ]]; then
     srun_options="-n1 -N1 --gres=gpu:${GPUS_PER_TASK} --exclusive --mem=${mem_per_task} --cpu-bind=cores"
 else
-    srun_options="-n1 -N1 --exclusive --mem=${mem_per_task} --cpu-bind=cores"
+    srun_options="-n1 -N1 --exclusive --mem=${mem_per_task} --cpu-bind=cores --network=Instances=2"
 fi
 
 IFS=' ' read -a srun_options <<< "$srun_options"
 
 counter=1
-echo $mem_per_task
 for cmd in "${CMDs[@]}"; do
     # --nv option: bind to system libraries (access to GPUS etc.)
     # --no-home and --containall mimics the docker container behavior
@@ -107,7 +106,7 @@ for cmd in "${CMDs[@]}"; do
     # for more info on srun see - https://docs.computecanada.ca/wiki/Advanced_MPI_scheduling
     # and https://slurm.schedmd.com/gres.html
     # and https://slurm.schedmd.com/srun.html
-    srun -n1 -N1 --mem=$mem_per_task --cpu-bind=cores bash -c \
+    srun ${srun_options[@]} bash -c \
         "singularity run \
         --nv \
         -B results:/results \
