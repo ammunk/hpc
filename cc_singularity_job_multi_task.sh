@@ -131,20 +131,20 @@ wait
 
 ######################################################################
 
-if [ -z ${RESULTS_TO_TAR} ]; then
-    # IF NO RESULTS TO TAR IS SPECIFIED - MAKE A TARBALL OF THE ENTIRE RESULTS DIRECTORY
-    RESULTS_TO_TAR=("results")
-else
-    # if variable is provided make into an array
-    IFS=' ' read -a RESULTS_TO_TAR <<< $RESULTS_TO_TAR
-fi
+# if [ -z ${RESULTS_TO_TAR} ]; then
+#     # IF NO RESULTS TO TAR IS SPECIFIED - MAKE A TARBALL OF THE ENTIRE RESULTS DIRECTORY
+#     RESULTS_TO_TAR=("results")
+# else
+#     # if variable is provided make into an array
+#     IFS=' ' read -a RESULTS_TO_TAR <<< $RESULTS_TO_TAR
+# fi
 
-# replace any "/"-character or spaces with "_" to use as a name
-results_to_tar_suffix=$(tr ' |/' '_' <<< ${RESULTS_TO_TAR[@]})
+# # replace any "/"-character or spaces with "_" to use as a name
+# results_to_tar_suffix=$(tr ' |/' '_' <<< ${RESULTS_TO_TAR[@]})
 
-# make a tarball of the results
-time tar -cf "tar_ball_${results_to_tar_suffix}_${SLURM_JOB_ID}.tar" ${RESULTS_TO_TAR[@]}
+# # make a tarball of the results
+# time tar -cf "tar_ball_${results_to_tar_suffix}_${SLURM_JOB_ID}.tar" ${RESULTS_TO_TAR[@]}
 
-# move unpack the tarball to the BASERESULTSDIR
-cd $BASERESULTSDIR
-tar --keep-newer-files -xf "${SLURM_TMPDIR}/tar_ball_${results_to_tar_suffix}_${SLURM_JOB_ID}.tar"
+# # move unpack the tarball to the BASERESULTSDIR
+# cd $BASERESULTSDIR
+# tar --keep-newer-files -xf "${SLURM_TMPDIR}/tar_ball_${results_to_tar_suffix}_${SLURM_JOB_ID}.tar"
