@@ -66,6 +66,10 @@ if [ ! -d "$TMP" ]; then
     mkdir "$TMP"
 fi
 
+echo "COMMANDS GIVEN:\n\t ${CMD}\n"
+echo "STUFF TO TAR:\n\t ${STUFF_TO_TAR}\n"
+echo "RESULTS TO TAR:\n\t ${RESULTS_TO_TAR}\n"
+
 # --nv option: bind to system libraries (access to GPUS etc.)
 # --no-home and --containall mimics the docker container behavior
 # without those /home and more will be mounted be default
@@ -102,9 +106,7 @@ fi
 results_to_tar_suffix=$(tr ' |/' '_' <<< ${RESULTS_TO_TAR[@]})
 
 # make a tarball of the results
-echo ${RESULTS_TO_TAR[@]}
 time tar -cf "tar_ball_${results_to_tar_suffix}_${SLURM_JOB_ID}.tar" ${RESULTS_TO_TAR[@]}
-ls results/training_data/orig_model
 
 # move unpack the tarball to the BASERESULTSDIR
 cd $BASERESULTSDIR
