@@ -107,7 +107,7 @@ for cmd in "${CMDs[@]}"; do
     # and https://slurm.schedmd.com/gres.html
     # and https://slurm.schedmd.com/srun.html
     srun ${srun_options[@]} bash -c \
-        "singularity run \
+        "module load singularity/3.2 && singularity run \
         --nv \
         -B results:/results \
         -B ${DB}_${counter}:/db \
