@@ -102,8 +102,10 @@ fi
 results_to_tar_suffix=$(tr ' |/' '_' <<< ${RESULTS_TO_TAR[@]})
 
 # make a tarball of the results
+echo ${RESULTS_TO_TAR[@]}
 time tar -cf "tar_ball_${results_to_tar_suffix}_${SLURM_JOB_ID}.tar" ${RESULTS_TO_TAR[@]}
+ls results/training_data/orig_model
 
 # move unpack the tarball to the BASERESULTSDIR
 cd $BASERESULTSDIR
-tar --keep-newer-files -xf "${SLURM_TMPDIR}/tar_ball_${results_to_tar_suffix}_${SLURM_JOB_ID}.tar"
+time tar --keep-newer-files -xf "${SLURM_TMPDIR}/tar_ball_${results_to_tar_suffix}_${SLURM_JOB_ID}.tar"
