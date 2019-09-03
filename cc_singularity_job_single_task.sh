@@ -71,7 +71,6 @@ fi
 # without those /home and more will be mounted be default
 # using "run" executed the "runscript" specified by the "%runscript"
 # any argument give "CMD" is passed to the runscript
-echo $CMD
 singularity run \
             --nv \
             -B "results:/results" \
