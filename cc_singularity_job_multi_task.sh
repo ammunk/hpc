@@ -106,8 +106,8 @@ for cmd in "${CMDs[@]}"; do
     # for more info on srun see - https://docs.computecanada.ca/wiki/Advanced_MPI_scheduling
     # and https://slurm.schedmd.com/gres.html
     # and https://slurm.schedmd.com/srun.html
-    srun ${srun_options[@]} bash -c \
-        "module load singularity/3.2 && singularity run \
+    srun -n1 -N1 --exclusive --mem=$mem_per_task --cpu-bind=cores bash -c \
+        "singularity run \
         --nv \
         -B results:/results \
         -B ${DB}_${counter}:/db \
