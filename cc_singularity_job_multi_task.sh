@@ -109,6 +109,7 @@ for cmd in "${CMDs[@]}"; do
     srun ${srun_options[@]} bash -c \
         "singularity run \
         --nv \
+        --export=ALL \
         -B results:/results \
         -B ${DB}_${counter}:/db \
         -B ${TMP}_{counter}:/tmp \
