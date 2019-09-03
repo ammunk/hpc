@@ -66,9 +66,9 @@ if [ ! -d "$TMP" ]; then
     mkdir "$TMP"
 fi
 
-echo "COMMANDS GIVEN:\n\t ${CMD}\n"
-echo "STUFF TO TAR:\n\t ${STUFF_TO_TAR}\n"
-echo "RESULTS TO TAR:\n\t ${RESULTS_TO_TAR}\n"
+echo "COMMANDS GIVEN: ${CMD}"
+echo "STUFF TO TAR: ${STUFF_TO_TAR}"
+echo "RESULTS TO TAR: ${RESULTS_TO_TAR}"
 
 # --nv option: bind to system libraries (access to GPUS etc.)
 # --no-home and --containall mimics the docker container behavior

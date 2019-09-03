@@ -96,10 +96,10 @@ fi
 IFS=' ' read -a srun_options <<< "$srun_options"
 
 counter=1
-echo "STUFF TO TAR:\n\t ${STUFF_TO_TAR}\n"
-echo "RESULTS TO TAR:\n\t ${RESULTS_TO_TAR}\n"
+echo "STUFF TO TAR: ${STUFF_TO_TAR}"
+echo "RESULTS TO TAR: ${RESULTS_TO_TAR}"
 for cmd in "${CMDs[@]}"; do
-    echo "COMMANDS GIVEN:\n\t ${cmd}\n"
+    echo "COMMANDS GIVEN: ${cmd}"
     # --nv option: bind to system libraries (access to GPUS etc.)
     # --no-home and --containall mimics the docker container behavior
     # without those /home and more will be mounted be default
