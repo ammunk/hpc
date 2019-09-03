@@ -88,9 +88,9 @@ done
 mem_per_task=$((${SLURM_MEM_PER_NODE} / ${SLURM_NTASKS}))
 
 if [[ $GPUS_PER_TASK -ge 1 ]]; then
-    srun_options="-n1 -N1 --gres=gpu:${GPUS_PER_TASK} --mem=${mem_per_task} --cpu-bind=none"
+    srun_options="-n1 -N1 --gres=gpu:${GPUS_PER_TASK} --exclusive --mem=${mem_per_task} --cpu-bind=none"
 else
-    srun_options="-n1 -N1 --mem=${mem_per_task} --cpu-bind=none"
+    srun_options="-n1 -N1 --exclusive --mem=${mem_per_task} --cpu-bind=none"
 fi
 
 IFS=' ' read -a srun_options <<< "$srun_options"
@@ -106,7 +106,7 @@ for cmd in "${CMDs[@]}"; do
     # for more info on srun see - https://docs.computecanada.ca/wiki/Advanced_MPI_scheduling
     # and https://slurm.schedmd.com/gres.html
     # and https://slurm.schedmd.com/srun.html
-    srun ${srun_options[@]} bash -c \
+    srun -n1 -N1 --mem=5G --exclusive --cpu-bind-none bash -c \
         "singularity run \
         --nv \
         -B results:/results \
