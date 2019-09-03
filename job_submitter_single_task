@@ -94,6 +94,7 @@ STUFF_TO_TAR=${STUFF_TO_TAR},RESULTS_TO_TAR=${RESULTS_TO_TAR},BASERESULTSDIR=${B
             sbatch "--job-name=${EXP_NAME}" \
                 "--time=${TIME}" \
                 "--cpus-per-task=${CPUS_PER_TASK}" \
+                "--ntasks-per-core=${CPUS_PER_TASK}" \
                 "--mem=${MEM}" \
                 "--gres=gpu:${GPUS}" \ # !!! if no GPUS are needed then DELETE this !!!
                 --chdir="${BASERESULTSDIR}" \

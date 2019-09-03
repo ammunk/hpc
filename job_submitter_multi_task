@@ -95,6 +95,7 @@ GPUS_PER_TASK=${GPUS_PER_TASK}"
             "--nodes=1" \
             "--ntasks=${ntasks}" \
             "--cpus-per-task=${CPUS_PER_TASK}" \
+            "--ntasks-per-core=${CPUS_PER_TASK}" \
             "--mem=${MEM}" \
             "--gres=gpu:${GPUS}" \ # !!! if no GPUS are needed then DELETE this !!!
             --chdir="${BASERESULTSDIR}" \
