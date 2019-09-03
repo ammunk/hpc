@@ -90,7 +90,7 @@ mem_per_task=$((${SLURM_MEM_PER_NODE} / ${SLURM_NTASKS}))
 if [[ $GPUS_PER_TASK -ge 1 ]]; then
     srun_options="-n1 -N1 --gres=gpu:${GPUS_PER_TASK} --exclusive --mem=${mem_per_task} --cpu-bind=none"
 else
-    srun_options="-n1 -N1 --exclusive --mem=${mem_per_task} --cpu-bind=none"
+    srun_options="-n1 -N1 --exclusive --mem=${mem_per_task} --cpu-bind=none --export=ALL"
 fi
 
 IFS=' ' read -a srun_options <<< "$srun_options"
@@ -109,7 +109,6 @@ for cmd in "${CMDs[@]}"; do
     srun ${srun_options[@]} bash -c \
         "singularity run \
         --nv \
-        --export=ALL \
         -B results:/results \
         -B ${DB}_${counter}:/db \
         -B ${TMP}_{counter}:/tmp \
