@@ -14,7 +14,7 @@
 #   - RESULTS_TO_TAR - the results we seek to move back from the temporary file; e.g. if we train an inference network we don't need to also move the training data back again
 
 # see - https://docs.computecanada.ca/wiki/Using_GPUs_with_Slurm for why we add this
-#export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 
 
 #################################################
@@ -88,15 +88,14 @@ done
 mem_per_task=$((${SLURM_MEM_PER_NODE} / ${SLURM_NTASKS}))
 
 if [[ $GPUS_PER_TASK -ge 1 ]]; then
-    srun_options="-n1 -N1 --gres=gpu:${GPUS_PER_TASK} --exclusive --mem=${mem_per_task} --cpu-bind=cores"
+    srun_options="-n1 -N1 --gres=gpu:${GPUS_PER_TASK} --exclusive --mem=${mem_per_task} --cpu-bind=none"
 else
-    srun_options="-n1 -N1 --exclusive --mem=${mem_per_task} --cpu-bind=cores --network=Instances=6"
+    srun_options="-n1 -N1 --exclusive --mem=${mem_per_task} --cpu-bind=none"
 fi
 
 IFS=' ' read -a srun_options <<< "$srun_options"
 
 counter=1
-echo $srun_options
 for cmd in "${CMDs[@]}"; do
     # --nv option: bind to system libraries (access to GPUS etc.)
     # --no-home and --containall mimics the docker container behavior
