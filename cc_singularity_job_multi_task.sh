@@ -44,7 +44,7 @@ time rsync -av "$CONTAINER" "$SLURM_TMPDIR"
 # replace any "/"-character or spaces with "_" to use as a name
 stuff_to_tar_suffix=$(tr ' |/' '_' <<< ${STUFF_TO_TAR})
 
-if [ ! -z ${STUFF_TO_TAR} ]; then
+if [ ! -z "${STUFF_TO_TAR}" ]; then
     if [ ! -f "tar_ball_${stuff_to_tar_suffix}.tar" ]; then
         # make tarball in $BASERESULTSDIR
         echo "Creating tarball"
@@ -55,7 +55,7 @@ fi
 # go to temporary directory
 cd "$SLURM_TMPDIR"
 
-if [ ! -z ${STUFF_TO_TAR} ]; then
+if [ ! -z "${STUFF_TO_TAR}" ]; then
     echo "Moving tarball to slurm tmpdir"
     time tar -xf "${BASERESULTSDIR}/tar_ball_${stuff_to_tar_suffix}.tar"
 fi
