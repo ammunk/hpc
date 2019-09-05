@@ -63,14 +63,15 @@ if [ ! -z ${SCRATCH} ]; then
     VARIABLES="OVERLAYDIR_CONTAINER=${OVERLAYDIR_CONTAINER},CONTAINER=${CONTAINER_NAME},\
 STUFF_TO_TAR=${STUFF_TO_TAR},RESULTS_TO_TAR=${RESULTS_TO_TAR},BASERESULTSDIR=${BASERESULTSDIR}"
 
-    # SUBMIT JOBS
+    # move singularity file
+    rsync -av "${EXP_DIR}/${CONTAINER_NAME}" "${BASERESULTSDIR}"
 
+    # SUBMIT JOBS
     for n in $(seq 1 $N)
     do
         seed=$(python -c "import random; print random.randint(0,2**32-1)")
         CMD_N="${CMD_BASE} seed=${seed}"
 
-        # specify results directory ID (so that each job can mount its own folder)
         if [[ "$SCHEDULER" = "PBS" ]]; then
             qsub -N "$EXP_NAME" \
                 -q "$QUEUE" \
@@ -83,8 +84,6 @@ STUFF_TO_TAR=${STUFF_TO_TAR},RESULTS_TO_TAR=${RESULTS_TO_TAR},BASERESULTSDIR=${B
                 -D "${BASERESULTSDIR}" \
                 ~/hpc/plai_${CONTAINER}_job.sh
         elif [[ "$SCHEDULER" = "SLURM" ]]; then
-
-            rsync -av "${EXP_DIR}/${CONTAINER_NAME}" "${BASERESULTSDIR}"
 
             # COMPUTE CANADA ONLY SUPPORTS SINGULARITY
             # COMPUTE CANADA should NEVER use mongoDB (at least not yet!)

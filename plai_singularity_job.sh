@@ -6,9 +6,6 @@
 #   - OVERLAYDIR_CONTAINER
 #   - RESULTSDIR_CONTAINER
 
-echo "Copying singularity to ${SLURM_TMPDIR}"
-time rsync -av "$CONTAINER" "$SLURM_TMPDIR"
-
 DB="db_${PBS_JOBID}"
 OVERLAY="overlay_${PBS_JOBID}"
 TMP="tmp_${PBS_JOBID}"
@@ -22,6 +19,7 @@ fi
 
 # make directory that singularity can mount to and use to setup a database
 # such as postgresql or a monogdb etc.
+
 if [ ! -d "$DB" ]; then
     mkdir "$DB"
 fi

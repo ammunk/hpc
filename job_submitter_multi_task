@@ -66,8 +66,10 @@ if [ ! -z ${SCRATCH} ]; then
 STUFF_TO_TAR=${STUFF_TO_TAR},RESULTS_TO_TAR=${RESULTS_TO_TAR},BASERESULTSDIR=${BASERESULTSDIR},ntasks=${ntasks},\
 GPUS_PER_TASK=${GPUS_PER_TASK}"
 
-    # SUBMIT JOBS
+    # move singularity file
+    rsync -av "${EXP_DIR}/${CONTAINER_NAME}" "${BASERESULTSDIR}"
 
+    # SUBMIT JOBS
     for n in $(seq 1 $N)
     do
         CMD=()
@@ -84,9 +86,6 @@ GPUS_PER_TASK=${GPUS_PER_TASK}"
             echo "number of tasks has to be one more than number of commands!!"
             exit 1
         fi
-
-        # specify results directory ID (so that each job can mount its own folder)
-        rsync -av "${EXP_DIR}/${CONTAINER_NAME}" "${BASERESULTSDIR}"
 
         # COMPUTE CANADA ONLY SUPPORTS SINGULARITY
         # COMPUTE CANADA should NEVER use mongoDB (at least not yet!)
