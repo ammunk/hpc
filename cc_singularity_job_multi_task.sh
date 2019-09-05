@@ -33,7 +33,7 @@ done
 n_commands=${#CMDs[@]}
 #################################################
 
-module load singularity/3.2
+module load singularity/3.4
 
 # see eg. https://docs.computecanada.ca/wiki/A_tutorial_on_%27tar%27
 

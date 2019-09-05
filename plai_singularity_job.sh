@@ -3,15 +3,21 @@
 #   - CMD
 #   - CONTAINER
 #   - BASERESULTSDIR
+#   - OVERLAYDIR_CONTAINER
 #   - RESULTSDIR_CONTAINER
 
-LOCAL="${BASERESULTSDIR}"
-DB="${BASERESULTSDIR}/db_${SLURM_JOB_ID}"
-OVERLAY="${BASERESULTSDIR}/overlay_${SLURM_JOB_ID}"
-TMP="${BASERESULTSDIR}/tmp_${SLURM_JOB_ID}"
+echo "Copying singularity to ${SLURM_TMPDIR}"
+time rsync -av "$CONTAINER" "$SLURM_TMPDIR"
 
-if [ ! -d "$LOCAL" ]; then
-    mkdir "$LOCAL"
+DB="db_${PBS_JOBID}"
+OVERLAY="overlay_${PBS_JOBID}"
+TMP="tmp_${PBS_JOBID}"
+
+cd "$BASERESULTSDIR"
+
+# ensure resultsdir exists
+if [ ! -d results ]; then
+    mkdir results
 fi
 
 # make directory that singularity can mount to and use to setup a database
@@ -29,14 +35,19 @@ fi
 if [ ! -d "$TMP" ]; then
     mkdir "$TMP"
 fi
+
+echo "COMMANDS GIVEN: ${CMD}"
+echo "STUFF TO TAR: ${STUFF_TO_TAR}"
+echo "RESULTS TO TAR: ${RESULTS_TO_TAR}"
+
 # --nv option: bind to system libraries (access to GPUS etc.)
 # --no-home and --contain mimics the docker container behavior
 # without those /home and more will be mounted be default
 # using "run" executed the "runscript" specified by the "%runscript"
 # any argument give "CMD" is passed to the runscript
-singularity run \
+/usr/loc/bin/singularity run \
             --nv \
-            -B "${LOCAL}:/results" \
+            -B "results:/results" \
             -B "${DB}":/db \
             -B "${TMP}":/tmp \
             -B "${OVERLAY}":"${OVERLAYDIR_CONTAINER}" \
