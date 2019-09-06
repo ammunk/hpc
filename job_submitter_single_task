@@ -76,10 +76,7 @@ STUFF_TO_TAR=${STUFF_TO_TAR},RESULTS_TO_TAR=${RESULTS_TO_TAR},BASERESULTSDIR=${B
             qsub -N "$EXP_NAME" \
                 -q "$QUEUE" \
                 -l "nodes=${NODES}:ppn=${CPUS_PER_TASK}" \
-                -l "mem=${MEM} " \
                 -l "walltime=${TIME}" \
-                -o "${BASERESULTSDIR}/hpc_output/${EXP_NAME}_%j.out" \
-                -e "${BASERESULTSDIR}/hpc_output/${EXP_NAME}_%j.err" \
                 -v "CMD=${CMD_N},$VARIABLES,EXP_NAME=${EXP_NAME},USE_MONGO=FALSE" \
                 -D "${BASERESULTSDIR}" \
                 ~/hpc/plai_${CONTAINER}_job.sh

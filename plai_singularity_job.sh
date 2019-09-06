@@ -1,5 +1,5 @@
-#PBS -o ${BASERESULTSDIR}/hpc_output/${EXP_NAME}_${PBS_JOBID}.out
-#PBS -e ${BASERESULTSDIR}/hpc_output/${EXP_NAME}_${PBS_JOBID}.err
+#PBS -o hpc_output/${PBS_JOBID}.out
+#PBS -e hpc_output/${PBS_JOBID}.err
 
 # THIS SCRIPT IS CALLED OUTSIDE USING "qsub"
 # FOLLOWING ENV VARIABLES HAS TO BE PROVIDED:
