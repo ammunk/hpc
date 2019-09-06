@@ -52,7 +52,6 @@ echo "RESULTS TO TAR: ${RESULTS_TO_TAR}"
             -B "${DB}":/db \
             -B "${TMP}":/tmp \
             -B "${OVERLAY}":"${OVERLAYDIR_CONTAINER}" \
-            --cleanenv \
             --no-home \
             --contain \
             --writable-tmpfs \
