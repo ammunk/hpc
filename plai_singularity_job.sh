@@ -57,7 +57,7 @@ echo "RESULTS TO TAR: ${RESULTS_TO_TAR}"
             --contain \
             --writable-tmpfs \
             "$CONTAINER" \
-            "$CMD"
+            "$CMD" | tee -a ${EXP_DIR}/hpc_scripts/hpc_out/output_${PBS_JOBID}.txt
 
 # remove temporary directories
 rm -r "$OVERLAY" "$DB" "$TMP"
