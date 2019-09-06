@@ -59,4 +59,4 @@ echo "RESULTS TO TAR: ${RESULTS_TO_TAR}"
             "$CMD" 2>&1 | tee -a ${EXP_DIR}/hpc_scripts/hpc_output/output_${PBS_JOBID}.txt
 
 # remove temporary directories
-rm -r "$OVERLAY" "$DB" "$TMP"
+rm -rf "$OVERLAY" "$DB" "$TMP"
