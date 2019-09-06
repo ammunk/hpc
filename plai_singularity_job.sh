@@ -46,7 +46,7 @@ echo "RESULTS TO TAR: ${RESULTS_TO_TAR}"
 # without those /home and more will be mounted be default
 # using "run" executed the "runscript" specified by the "%runscript"
 # any argument give "CMD" is passed to the runscript
-/usr/loc/bin/singularity run \
+/usr/local/bin/singularity run \
             --nv \
             -B "results:/results" \
             -B "${DB}":/db \
