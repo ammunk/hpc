@@ -77,7 +77,7 @@ STUFF_TO_TAR=${STUFF_TO_TAR},RESULTS_TO_TAR=${RESULTS_TO_TAR},BASERESULTSDIR=${B
                 -q "$QUEUE" \
                 -l "nodes=${NODES}:ppn=${CPUS_PER_TASK}" \
                 -l "walltime=${TIME}" \
-                -v "CMD=${CMD_N},$VARIABLES,EXP_NAME=${EXP_NAME},USE_MONGO=FALSE" \
+                -v "CMD=${CMD_N},$VARIABLES,EXP_DIR=${EXP_DIR},EXP_NAME=${EXP_NAME},USE_MONGO=FALSE" \
                 ~/hpc/plai_${CONTAINER}_job.sh
         elif [[ "$SCHEDULER" = "SLURM" ]]; then
 
