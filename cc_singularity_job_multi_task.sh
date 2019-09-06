@@ -16,6 +16,7 @@
 # see - https://docs.computecanada.ca/wiki/Using_GPUs_with_Slurm for why we add this
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 
+module load singularity/3.4
 
 #################################################
 
