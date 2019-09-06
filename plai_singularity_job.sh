@@ -60,4 +60,4 @@ echo "RESULTS TO TAR: ${RESULTS_TO_TAR}"
             "$CMD"
 
 # remove temporary directories
-rm -r "$OVERLAY" "$DB" "$TMP"
+#rm -r "$OVERLAY" "$DB" "$TMP"
