@@ -9,7 +9,7 @@
 #   - OVERLAYDIR_CONTAINER
 #   - RESULTSDIR_CONTAINER
 
-PBS_TMPDIR="/var/tmp/tmp_${PBS_JOBID}"
+PBS_TMPDIR="/var/tmp/amunk_tmp_${PBS_JOBID}"
 
 mkdir -p $PBS_TMPDIR
 
