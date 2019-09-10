@@ -11,6 +11,8 @@
 
 PBS_TMPDIR="/var/tmp/tmp_${PBS_JOBID}"
 
+mkdir -p $PBS_TMPDIR
+
 DB="db_${PBS_JOBID}"
 OVERLAY="overlay_${PBS_JOBID}"
 TMP="tmp_${PBS_JOBID}"
