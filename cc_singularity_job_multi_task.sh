@@ -16,7 +16,7 @@
 # see - https://docs.computecanada.ca/wiki/Using_GPUs_with_Slurm for why we add this
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 
-module load singularity/3.3
+module load singularity/3.4
 
 #################################################
 
@@ -33,8 +33,6 @@ done
 
 n_commands=${#CMDs[@]}
 #################################################
-
-module load singularity/3.4
 
 # see eg. https://docs.computecanada.ca/wiki/A_tutorial_on_%27tar%27
 
@@ -131,7 +129,7 @@ wait
 ######################################################################
 
 # MAKE SURE THE RESULTS SAVED HAVE UNIQUE NAMES EITHER USING JOB ID AND
-# OR SOME OTHER WAY - !!!! OTHERWISE STUFF WILL BE OVERWRITEN !!!!
+# OR SOME OTHER WAY - !!!! OTHERWISE STUFF WILL BE OVERWRITTEN !!!!
 
 ######################################################################
 
