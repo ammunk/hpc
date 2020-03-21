@@ -1,27 +1,27 @@
-#PBS -o hpc_output/${PBS_JOBID}.out
-#PBS -e hpc_output/${PBS_JOBID}.err
+#!/bin/bash
 
-# THIS SCRIPT IS CALLED OUTSIDE USING "qsub"
+# THIS SCRIPT IS CALLED OUTSIDE USING "sbatch"
 # FOLLOWING ENV VARIABLES HAS TO BE PROVIDED:
 #   - CMD
 #   - CONTAINER
 #   - BASERESULTSDIR
 #   - OVERLAYDIR_CONTAINER
-#   - RESULTSDIR_CONTAINER
+#   - STUFF_TO_TAR - e.g. move the training data to the SLURM_TMPDIR for traning a network
+#   - RESULTS_TO_TAR - the results we seek to move back from the temporary file; e.g. if we train an inference network we don't need to also move the training data back again
 
-PBS_TMPDIR="/var/tmp/amunk_tmp_${PBS_JOBID}"
+PLAI_TMPDIR="/scratch-ssd/amunk"
 
-mkdir -p $PBS_TMPDIR
+mkdir -p $PLAI_TMPDIR
 
-DB="db_${PBS_JOBID}"
-OVERLAY="overlay_${PBS_JOBID}"
-TMP="tmp_${PBS_JOBID}"
+DB="db_${SLURM_JOB_ID}"
+OVERLAY="overlay_${SLURM_JOB_ID}"
+TMP="tmp_${SLURM_JOB_ID}"
 
 cd "$BASERESULTSDIR"
 
 # move data to temporary SLURM DIR which is much faster for I/O
-echo "Copying singularity to ${PBS_TMPDIR}"
-time rsync -av "$CONTAINER" "${PBS_TMPDIR}"
+echo "Copying singularity to ${PLAI_TMPDIR}"
+time rsync -av "$CONTAINER" "${PLAI_TMPDIR}"
 
 # replace any "/"-character or spaces with "_" to use as a name
 stuff_to_tar_suffix=$(tr ' |/' '_' <<< ${STUFF_TO_TAR})
@@ -35,7 +35,7 @@ if [ ! -z "${STUFF_TO_TAR}" ]; then
 fi
 
 # go to temporary directory
-cd "$PBS_TMPDIR"
+cd "$PLAI_TMPDIR"
 
 if [ ! -z "${STUFF_TO_TAR}" ]; then
     echo "Moving tarball to slurm tmpdir"
@@ -83,8 +83,7 @@ echo "RESULTS TO TAR: ${RESULTS_TO_TAR}"
             --contain \
             --writable-tmpfs \
             "$CONTAINER" \
-            "$CMD" 2>&1 | tee -a ${EXP_DIR}/hpc_scripts/hpc_output/output_${PBS_JOBID}.txt
-
+            "$CMD" 2>&1 | tee -a ${EXP_DIR}/hpc_scripts/hpc_output/output_${SLURM_JOB_ID}.txt
 
 ######################################################################
 
@@ -105,15 +104,15 @@ fi
 results_to_tar_suffix=$(tr ' |/' '_' <<< ${RESULTS_TO_TAR[@]})
 
 # make a tarball of the results
-time tar -cf "tar_ball_${results_to_tar_suffix}_${PBS_JOBID}.tar" ${RESULTS_TO_TAR[@]}
+time tar -cf "tar_ball_${results_to_tar_suffix}_${SLURM_JOB_ID}.tar" ${RESULTS_TO_TAR[@]}
 
 # move unpack the tarball to the BASERESULTSDIR
 cd $BASERESULTSDIR
-time tar --keep-newer-files -xf "${PBS_TMPDIR}/tar_ball_${results_to_tar_suffix}_${PBS_JOBID}.tar"
+time tar --keep-newer-files -xf "${PLAI_TMPDIR}/tar_ball_${results_to_tar_suffix}_${SLURM_JOB_ID}.tar"
 
 ######################################################################
 
 # CLEANUP
 
 # remove temporary directories
-rm -rf "${PBS_TMPDIR}"
+rm -rf "${PLAI_TMPDIR}"

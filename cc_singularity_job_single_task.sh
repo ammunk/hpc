@@ -20,7 +20,7 @@ module load singularity/3.3
 
 # move data to temporary SLURM DIR which is much faster for I/O
 echo "Copying singularity to ${SLURM_TMPDIR}"
-time rsync -av "$CONTAINER" "$SLURM_TMPDIR"
+time rsync -av "$CONTAINER" "${SLURM_TMPDIR}"
 
 # replace any "/"-character or spaces with "_" to use as a name
 stuff_to_tar_suffix=$(tr ' |/' '_' <<< ${STUFF_TO_TAR})
