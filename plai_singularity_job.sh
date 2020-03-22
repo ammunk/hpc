@@ -69,16 +69,16 @@ echo "COMMANDS GIVEN: ${CMD}"
 echo "STUFF TO TAR: ${STUFF_TO_TAR}"
 echo "RESULTS TO TAR: ${RESULTS_TO_TAR}"
 
-options=" --nv \
-            -B results:/results \
-            -B ${DB}:/db \
-            -B ${TMP}:/tmp \
-            -B ${OVERLAY}:${OVERLAYDIR_CONTAINER} \
-            --no-home \
-            --contain \
-            --writable-tmpfs \
-            ${CONTAINER} \
-            ${CMD} 2>&1 | tee -a ${EXP_DIR}/hpc_scripts/hpc_output/output_${SLURM_JOB_ID}.txt"
+options="--nv \
+         -B results:/results \
+         -B ${DB}:/db \
+         -B ${TMP}:/tmp \
+         -B ${OVERLAY}:${OVERLAYDIR_CONTAINER} \
+         --no-home \
+         --contain \
+         --writable-tmpfs \
+         ${CONTAINER} \
+         $\"{CMD} 2>&1 | tee -a ${EXP_DIR}/hpc_scripts/hpc_output/output_${SLURM_JOB_ID}.txt\""
 
 if [ -d datasets ]; then
     options="${options} -B datasets:/datasets"
@@ -89,7 +89,7 @@ fi
 # without those /home and more will be mounted be default
 # using "run" executed the "runscript" specified by the "%runscript"
 # any argument give "CMD" is passed to the runscript
-/opt/singularity/bin/singularity run ${options[@]}
+bash -c "/opt/singularity/bin/singularity run ${options[@]}"
 
 ######################################################################
 
