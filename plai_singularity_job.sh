@@ -68,22 +68,27 @@ echo "COMMANDS GIVEN: ${CMD}"
 echo "STUFF TO TAR: ${STUFF_TO_TAR}"
 echo "RESULTS TO TAR: ${RESULTS_TO_TAR}"
 
+options=" --nv \
+            -B results:/results \
+            -B ${DB}:/db \
+            -B ${TMP}:/tmp \
+            -B ${OVERLAY}:${OVERLAYDIR_CONTAINER} \
+            --no-home \
+            --contain \
+            --writable-tmpfs \
+            ${CONTAINER} \
+            ${CMD} 2>&1 | tee -a ${EXP_DIR}/hpc_scripts/hpc_output/output_${SLURM_JOB_ID}.txt"
+
+if [ -d datasets ]; then
+    options="${options} -B datasets:/datasets"
+fi
+
 # --nv option: bind to system libraries (access to GPUS etc.)
 # --no-home and --contain mimics the docker container behavior
 # without those /home and more will be mounted be default
 # using "run" executed the "runscript" specified by the "%runscript"
 # any argument give "CMD" is passed to the runscript
-/usr/local/bin/singularity run \
-            --nv \
-            -B "results:/results" \
-            -B "${DB}":/db \
-            -B "${TMP}":/tmp \
-            -B "${OVERLAY}":"${OVERLAYDIR_CONTAINER}" \
-            --no-home \
-            --contain \
-            --writable-tmpfs \
-            "$CONTAINER" \
-            "$CMD" 2>&1 | tee -a ${EXP_DIR}/hpc_scripts/hpc_output/output_${SLURM_JOB_ID}.txt
+/opt/singularity/bin/singularity run ${options[@]}
 
 ######################################################################
 

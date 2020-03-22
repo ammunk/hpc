@@ -32,7 +32,6 @@ PARTITION="plai"
 OVERLAYDIR_CONTAINER="/overlay"
 
 # container arguments
-CONTAINER_TYPE="singularity" # docker/singularity
 CONTAINER_NAME="raven.sif"
 
 # command send to container
@@ -74,6 +73,7 @@ STUFF_TO_TAR=${STUFF_TO_TAR},RESULTS_TO_TAR=${RESULTS_TO_TAR},BASERESULTSDIR=${B
     do
 
         if [ ! -z ${seed} ]; then
+            # if seed is not set make one
             seed=$(python -c "import random; print random.randint(0,2**32-1)")
         fi
         CMD_N="${CMD_BASE} seed=${seed}"
@@ -92,7 +92,7 @@ STUFF_TO_TAR=${STUFF_TO_TAR},RESULTS_TO_TAR=${RESULTS_TO_TAR},BASERESULTSDIR=${B
         if [[ "$CLUSTER" = "PLAI" ]]; then
                 sbatch_cmd="${sbatch_cmd} \
                             --partition=${PARTITION} \
-                            ~/hpc/plai_${CONTAINER}_job.sh"
+                            ~/hpc/plai_singularity_job.sh"
         elif [[ "$CLUSTER" = "CC" ]]; then
 
             # COMPUTE CANADA ONLY SUPPORTS SINGULARITY
@@ -103,7 +103,6 @@ STUFF_TO_TAR=${STUFF_TO_TAR},RESULTS_TO_TAR=${RESULTS_TO_TAR},BASERESULTSDIR=${B
         sbatch ${sbatch_cmd[@]}
         sleep 1 # sleep so that we do not overwhelm the scheduler (SEE e.g. compute canada's website)
     done
-
 else
     exit 1
 fi
