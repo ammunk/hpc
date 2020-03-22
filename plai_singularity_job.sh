@@ -122,3 +122,5 @@ time tar --keep-newer-files -xf "${PLAI_TMPDIR}/tar_ball_${results_to_tar_suffix
 
 # remove temporary directories
 rm -rf "${PLAI_TMPDIR}"
+echo "CHECK WHATS IN /scratch-ssd:"
+ls /scratch-ssd
