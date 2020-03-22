@@ -20,7 +20,7 @@ TMP="tmp_${SLURM_JOB_ID}"
 cd "$BASERESULTSDIR"
 
 # move data to temporary SLURM DIR which is much faster for I/O
-echo "Copying singularity to ${PLAI_TMPDIR}"
+echo "Copying singularity (${CODE_DIR}/${CONTAINER}) to ${PLAI_TMPDIR}"
 # move singularity file
 time rsync -av "${CODE_DIR}/${CONTAINER}" "${PLAI_TMPDIR}"
 
