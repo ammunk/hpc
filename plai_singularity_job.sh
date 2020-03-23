@@ -88,7 +88,7 @@ fi
          --contain \
          --writable-tmpfs \
          ${CONTAINER} \
-         ${CMD} 2>&1 | tee -a ${EXP_DIR}/hpc_scripts/hpc_output/output_${SLURM_JOB_ID}.txt
+         ${CMD}
 
 
 ######################################################################
