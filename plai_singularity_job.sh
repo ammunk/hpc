@@ -65,13 +65,14 @@ if [ ! -d "$TMP" ]; then
     mkdir "$TMP"
 fi
 
+if [ ! -d datasets ]; then
+    mkdir datasets
+fi
+
 echo "COMMANDS GIVEN: ${CMD}"
 echo "STUFF TO TAR: ${STUFF_TO_TAR}"
 echo "RESULTS TO TAR: ${RESULTS_TO_TAR}"
-
-if [ ! -d ${PLAI_TMPDIR}/datasets ]; then
-    mkdir ${PLAI_TMPDIR}/datasets
-fi
+echo "WHAT IN TMPDIR:" && ls
 
 # --nv option: bind to system libraries (access to GPUS etc.)
 # --no-home and --contain mimics the docker container behavior
@@ -122,5 +123,4 @@ time tar --keep-newer-files -xf "${PLAI_TMPDIR}/tar_ball_${results_to_tar_suffix
 
 # remove temporary directories
 rm -rf "${PLAI_TMPDIR}"
-echo "CHECK WHATS IN /scratch-ssd:"
-ls /scratch-ssd
+echo "CHECK WHATS IN /scratch-ssd:" && ls /scratch-ssd
