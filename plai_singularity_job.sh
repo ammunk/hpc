@@ -69,8 +69,8 @@ echo "COMMANDS GIVEN: ${CMD}"
 echo "STUFF TO TAR: ${STUFF_TO_TAR}"
 echo "RESULTS TO TAR: ${RESULTS_TO_TAR}"
 
-if [ ! -d datasets ]; then
-    mkdir results
+if [ ! -d ${PLAI_TMPDIR}/datasets ]; then
+    mkdir ${PLAI_TMPDIR}/datasets
 fi
 
 # --nv option: bind to system libraries (access to GPUS etc.)
