@@ -46,12 +46,7 @@ RESULTS_TO_TAR=""
 # set base directory names to store results from jobs (specific directory will be given in the job script)
 if [ ! -z ${SCRATCH} ]; then
 
-    # resolve scratch location
-    if [ -d ${SCRATCH}/amunk_docker ]; then # we are on local hpc
-        BASERESULTSDIR="${SCRATCH}/amunk_docker/${PROJECT_DIR}"
-    else # we are on compute canada
-        BASERESULTSDIR="${SCRATCH}/${PROJECT_DIR}"
-    fi
+    BASERESULTSDIR="${SCRATCH}/${PROJECT_DIR}"
 
     # create hpc_output directory if it does not exist
     if [ ! -d "${BASERESULTSDIR}/hpc_output" ]; then
@@ -65,9 +60,6 @@ if [ ! -z ${SCRATCH} ]; then
     VARIABLES="OVERLAYDIR_CONTAINER=${OVERLAYDIR_CONTAINER},CONTAINER=${CONTAINER_NAME},\
 STUFF_TO_TAR=${STUFF_TO_TAR},RESULTS_TO_TAR=${RESULTS_TO_TAR},BASERESULTSDIR=${BASERESULTSDIR},ntasks=${ntasks},\
 GPUS_PER_TASK=${GPUS_PER_TASK}"
-
-    # move singularity file
-    rsync -av "${EXP_DIR}/${CONTAINER_NAME}" "${BASERESULTSDIR}"
 
     # SUBMIT JOBS
     for n in $(seq 1 $N)
