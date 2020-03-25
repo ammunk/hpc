@@ -14,13 +14,13 @@
 # see - https://docs.computecanada.ca/wiki/Using_GPUs_with_Slurm for why we add this
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 
-module load singularity/3.4
+module load singularity/3.5
 
 # see eg. https://docs.computecanada.ca/wiki/A_tutorial_on_%27tar%27
 
 # move data to temporary SLURM DIR which is much faster for I/O
 echo "Copying singularity to ${SLURM_TMPDIR}"
-time rsync -av "$CONTAINER" "${SLURM_TMPDIR}"
+time rsync -av "${CODE_DIR}/${CONTAINER}" "${SLURM_TMPDIR}"
 
 # replace any "/"-character or spaces with "_" to use as a name
 stuff_to_tar_suffix=$(tr ' |/' '_' <<< ${STUFF_TO_TAR})
@@ -66,6 +66,10 @@ if [ ! -d "$TMP" ]; then
     mkdir "$TMP"
 fi
 
+if [ ! -d datasets ]; then
+    mkdir datasets
+fi
+
 echo "COMMANDS GIVEN: ${CMD}"
 echo "STUFF TO TAR: ${STUFF_TO_TAR}"
 echo "RESULTS TO TAR: ${RESULTS_TO_TAR}"
@@ -78,6 +82,7 @@ echo "RESULTS TO TAR: ${RESULTS_TO_TAR}"
 singularity run \
             --nv \
             -B "results:/results" \
+            -B datasets:/datasets \
             -B "${DB}":/db \
             -B "${TMP}":/tmp \
             -B "${OVERLAY}":"${OVERLAYDIR_CONTAINER}" \
