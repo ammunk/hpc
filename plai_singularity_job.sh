@@ -9,7 +9,7 @@
 #   - STUFF_TO_TAR - e.g. move the training data to the SLURM_TMPDIR for traning a network
 #   - RESULTS_TO_TAR - the results we seek to move back from the temporary file; e.g. if we train an inference network we don't need to also move the training data back again
 
-PLAI_TMPDIR="/scratch-ssd/amunk"
+PLAI_TMPDIR="/scratch-ssd/amunk_${SLURM_JOB_ID}"
 
 mkdir -p $PLAI_TMPDIR
 
