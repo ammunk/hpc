@@ -120,8 +120,8 @@ STUFF_TO_TAR=${STUFF_TO_TAR},RESULTS_TO_TAR=${RESULTS_TO_TAR},BASERESULTSDIR=${B
         if ! [[ "$GPUS" =~ "$re" ]] ; then
             echo "error: GPUS must be interger" >&2; exit 1
         else
-            if [[ "$GPUS" = "0" ]]; then
-                sbatch_cmd = "${sbatch_cmd} --gres=gpu:${GPUS}"
+            if [[ "$GPUS" != "0" ]]; then
+                sbatch_cmd="${sbatch_cmd} --gres=gpu:${GPUS}"
             fi
         fi
 
