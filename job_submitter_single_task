@@ -125,7 +125,7 @@ STUFF_TO_TAR=${STUFF_TO_TAR},RESULTS_TO_TAR=${RESULTS_TO_TAR},BASERESULTSDIR=${B
                 bash -c "sbatch ${sbatch_cmd[@]} ~/hpc/plai_singularity_job.sh"
             elif [[ "$CLUSTER" = "CC" ]]; then
                 if [[ "$GPUS" != "0" ]]; then
-                    sbatch_cmd="${sbatch_cmd} --gres=gpu:v100:${GPUS}"
+                    sbatch_cmd="${sbatch_cmd} --gres=gpu:v100l:${GPUS}"
                 fi
 		            bash -c "sbatch ${sbatch_cmd[@]} ~/hpc/cc_singularity_job_single_task.sh"
             fi
