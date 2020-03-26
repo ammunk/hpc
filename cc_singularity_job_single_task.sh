@@ -79,19 +79,21 @@ echo "RESULTS TO TAR: ${RESULTS_TO_TAR}"
 # without those /home and more will be mounted be default
 # using "run" executed the "runscript" specified by the "%runscript"
 # any argument give "CMD" is passed to the runscript
-singularity run \
-            --nv \
-            --cleanenv \
-            -B "results:/results" \
-            -B datasets:/datasets \
-            -B "${DB}":/db \
-            -B "${TMP}":/tmp \
-            -B "${OVERLAY}":"${OVERLAYDIR_CONTAINER}" \
-            --no-home \
-            --contain\
-            --writable-tmpfs \
-            "$CONTAINER" \
-            "$CMD"
+SINGULARITYENV_SLURM_JOB_ID=$SLURM_JOB_ID \
+                           SINGULARITYENV_SLURM_PROCID=$SLURM_PROCID \
+                           singularity run \
+                                --nv \
+                                --cleanenv \
+                                -B "results:/results" \
+                                -B datasets:/datasets \
+                                -B "${DB}":/db \
+                                -B "${TMP}":/tmp \
+                                -B "${OVERLAY}":"${OVERLAYDIR_CONTAINER}" \
+                                --no-home \
+                                --contain\
+                                --writable-tmpfs \
+                                "$CONTAINER" \
+                                "$CMD"
 
 ######################################################################
 

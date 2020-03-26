@@ -110,18 +110,20 @@ for cmd in "${CMDs[@]}"; do
     # and https://slurm.schedmd.com/gres.html
     # and https://slurm.schedmd.com/srun.html
     bash -c "srun ${srun_options[@]} bash -c \
-         \"singularity run \
-         --nv \
-         --cleanenv \
-         -B results:/results \
-         -B ${DB}_${counter}:/db \
-         -B ${TMP}_{counter}:/tmp \
-         -B ${OVERLAY}_${counter}:${OVERLAYDIR_CONTAINER} \
-         --no-home \
-         --contain \
-         --writable-tmpfs \
-         ${CONTAINER} \
-         ${cmd}\" &"
+         \"SINGULARITYENV_SLURM_JOB_ID=$SLURM_JOB_ID \
+                           SINGULARITYENV_SLURM_PROCID=$SLURM_PROCID \
+                           singularity run \
+                                --nv \
+                                --cleanenv \
+                                -B results:/results \
+                                -B ${DB}_${counter}:/db \
+                                -B ${TMP}_{counter}:/tmp \
+                                -B ${OVERLAY}_${counter}:${OVERLAYDIR_CONTAINER} \
+                                --no-home \
+                                --contain \
+                                --writable-tmpfs \
+                                ${CONTAINER} \
+                                ${cmd}\" &"
     counter=$((counter + 1))
     sleep 1
 done
