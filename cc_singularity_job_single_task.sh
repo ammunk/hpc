@@ -12,7 +12,6 @@
 #   - RESULTS_TO_TAR - the results we seek to move back from the temporary file; e.g. if we train an inference network we don't need to also move the training data back again
 
 # see - https://docs.computecanada.ca/wiki/Using_GPUs_with_Slurm for why we add this
-export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 
 module load singularity/3.5
 
@@ -76,11 +75,13 @@ echo "RESULTS TO TAR: ${RESULTS_TO_TAR}"
 
 # --nv option: bind to system libraries (access to GPUS etc.)
 # --no-home and --containall mimics the docker container behavior
+# --cleanenv is crucial to get wandb to work, as local environment variables may cause it to break on some systems
 # without those /home and more will be mounted be default
 # using "run" executed the "runscript" specified by the "%runscript"
 # any argument give "CMD" is passed to the runscript
 singularity run \
             --nv \
+            --cleanenv \
             -B "results:/results" \
             -B datasets:/datasets \
             -B "${DB}":/db \

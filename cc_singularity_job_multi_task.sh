@@ -101,6 +101,7 @@ for cmd in "${CMDs[@]}"; do
     echo "COMMANDS GIVEN: ${cmd}"
     # --nv option: bind to system libraries (access to GPUS etc.)
     # --no-home and --containall mimics the docker container behavior
+    # --cleanenv is crucial to get wandb to work, as local environment variables may cause it to break on some systems
     # without those /home and more will be mounted be default
     # using "run" executed the "runscript" specified by the "%runscript"
     # any argument give "cmd" is passed to the runscript
@@ -111,6 +112,7 @@ for cmd in "${CMDs[@]}"; do
     bash -c "srun ${srun_options[@]} bash -c \
          \"singularity run \
          --nv \
+         --cleanenv \
          -B results:/results \
          -B ${DB}_${counter}:/db \
          -B ${TMP}_{counter}:/tmp \

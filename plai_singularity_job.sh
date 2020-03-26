@@ -76,10 +76,12 @@ echo "WHAT IN TMPDIR:" && ls
 
 # --nv option: bind to system libraries (access to GPUS etc.)
 # --no-home and --contain mimics the docker container behavior
+# --cleanenv is crucial to get wandb to work, as local environment variables may cause it to break on some systems
 # without those /home and more will be mounted be default
 # using "run" executed the "runscript" specified by the "%runscript"
 # any argument give "CMD" is passed to the runscript
 /opt/singularity/bin/singularity run --nv \
+         --cleanenv \
          -B results:/results \
          -B datasets:/datasets \
          -B ${DB}:/db \
