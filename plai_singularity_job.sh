@@ -82,6 +82,7 @@ echo "WHAT IN TMPDIR:" && ls
 # any argument give "CMD" is passed to the runscript
 SINGULARITYENV_SLURM_JOB_ID=$SLURM_JOB_ID \
                            SINGULARITYENV_SLURM_PROCID=$SLURM_PROCID \
+                           WANDB_RUN_GROUP="PLAI" \
                            /opt/singularity/bin/singularity run \
                                 --nv \
                                 --cleanenv \

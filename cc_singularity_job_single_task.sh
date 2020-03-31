@@ -81,6 +81,7 @@ echo "RESULTS TO TAR: ${RESULTS_TO_TAR}"
 # any argument give "CMD" is passed to the runscript
 SINGULARITYENV_SLURM_JOB_ID=$SLURM_JOB_ID \
                            SINGULARITYENV_SLURM_PROCID=$SLURM_PROCID \
+                           WANDB_RUN_GROUP="CC" \
                            singularity run \
                                 --nv \
                                 --cleanenv \
