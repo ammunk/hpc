@@ -86,7 +86,7 @@ SINGULARITYENV_SLURM_JOB_ID=$SLURM_JOB_ID \
                            /opt/singularity/bin/singularity run \
                                 --nv \
                                 --cleanenv \
-                                -B results:/results \
+                                -B results:/code/results \
                                 -B datasets:/datasets \
                                 -B ${DB}:/db \
                                 -B ${TMP}:/tmp \
