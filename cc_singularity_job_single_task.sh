@@ -37,7 +37,7 @@ cd "$SLURM_TMPDIR"
 
 if [ ! -z "${STUFF_TO_TAR}" ]; then
     echo "Moving tarball to slurm tmpdir"
-    time tar -xf "${BASERESULTSDIR}/tar_ball_${stuff_to_tar_suffix}.tar"
+    time tar --keep-newer-files -xf "${BASERESULTSDIR}/tar_ball_${stuff_to_tar_suffix}.tar"
 fi
 
 DB="db_${SLURM_JOB_ID}"
@@ -83,18 +83,18 @@ SINGULARITYENV_SLURM_JOB_ID=$SLURM_JOB_ID \
                            SINGULARITYENV_SLURM_PROCID=$SLURM_PROCID \
                            WANDB_RUN_GROUP="CC" \
                            singularity run \
-                                --nv \
-                                --cleanenv \
-                                -B "results:/code/results" \
-                                -B datasets:/datasets \
-                                -B "${DB}":/db \
-                                -B "${TMP}":/tmp \
-                                -B "${OVERLAY}":"${OVERLAYDIR_CONTAINER}" \
-                                --no-home \
-                                --contain\
-                                --writable-tmpfs \
-                                "$CONTAINER" \
-                                "$CMD"
+                           --nv \
+                           --cleanenv \
+                           -B results:"${RESULTS_MOUNT}" \
+                           -B datasets:/datasets \
+                           -B "${DB}":/db \
+                           -B "${TMP}":/tmp \
+                           -B "${OVERLAY}":"${OVERLAYDIR_CONTAINER}" \
+                           --no-home \
+                           --contain\
+                           --writable-tmpfs \
+                           "$CONTAINER" \
+                           "$CMD"
 
 ######################################################################
 
@@ -115,8 +115,9 @@ fi
 results_to_tar_suffix="$(tr ' |/' '_' <<< ${RESULTS_TO_TAR[@]})"
 
 # make a tarball of the results
-time tar -cf "tar_ball_${results_to_tar_suffix}_${SLURM_JOB_ID}.tar" "${RESULTS_TO_TAR[@]}"
+time tar -cf "tar_ball_${results_to_tar_suffix}_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}.tar" "${RESULTS_TO_TAR[@]}"
 
 # move unpack the tarball to the BASERESULTSDIR
 cd "$BASERESULTSDIR"
-time tar --keep-newer-files -xf "${SLURM_TMPDIR}/tar_ball_${results_to_tar_suffix}_${SLURM_JOB_ID}.tar"
+
+time tar --keep-newer-files -xf "${SLURM_TMPDIR}/tar_ball_${results_to_tar_suffix}_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}.tar"

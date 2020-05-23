@@ -9,13 +9,13 @@
 #   - STUFF_TO_TAR - e.g. move the training data to the SLURM_TMPDIR for traning a network
 #   - RESULTS_TO_TAR - the results we seek to move back from the temporary file; e.g. if we train an inference network we don't need to also move the training data back again
 
-PLAI_TMPDIR="/scratch-ssd/amunk_${SLURM_JOB_ID}"
+PLAI_TMPDIR="/scratch-ssd/amunk_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
 
 mkdir -p $PLAI_TMPDIR
 
-DB="db_${SLURM_JOB_ID}"
-OVERLAY="overlay_${SLURM_JOB_ID}"
-TMP="tmp_${SLURM_JOB_ID}"
+DB="db_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
+OVERLAY="overlay_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
+TMP="tmp_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
 
 cd "$BASERESULTSDIR"
 
@@ -72,7 +72,6 @@ fi
 echo "COMMANDS GIVEN: ${CMD}"
 echo "STUFF TO TAR: ${STUFF_TO_TAR}"
 echo "RESULTS TO TAR: ${RESULTS_TO_TAR}"
-echo "WHAT IN TMPDIR:" && ls
 
 # --nv option: bind to system libraries (access to GPUS etc.)
 # --no-home and --contain mimics the docker container behavior
@@ -84,18 +83,18 @@ SINGULARITYENV_SLURM_JOB_ID=$SLURM_JOB_ID \
                            SINGULARITYENV_SLURM_PROCID=$SLURM_PROCID \
                            WANDB_RUN_GROUP="PLAI" \
                            /opt/singularity/bin/singularity run \
-                                --nv \
-                                --cleanenv \
-                                -B results:/code/results \
-                                -B datasets:/datasets \
-                                -B ${DB}:/db \
-                                -B ${TMP}:/tmp \
-                                -B ${OVERLAY}:${OVERLAYDIR_CONTAINER} \
-                                --no-home \
-                                --contain \
-                                --writable-tmpfs \
-                                ${CONTAINER} \
-                                ${CMD}
+                           --nv \
+                           --cleanenv \
+                           -B results:"${RESULTS_MOUNT}" \
+                           -B datasets:/datasets \
+                           -B ${DB}:/db \
+                           -B ${TMP}:/tmp \
+                           -B ${OVERLAY}:${OVERLAYDIR_CONTAINER} \
+                           --no-home \
+                           --contain \
+                           --writable-tmpfs \
+                           ${CONTAINER} \
+                           ${CMD}
 
 
 ######################################################################
@@ -117,11 +116,11 @@ fi
 results_to_tar_suffix="$(tr ' |/' '_' <<< ${RESULTS_TO_TAR[@]})"
 
 # make a tarball of the results
-time tar -cf "tar_ball_${results_to_tar_suffix}_${SLURM_JOB_ID}.tar" "${RESULTS_TO_TAR[@]}"
+time tar -cf "tar_ball_${results_to_tar_suffix}_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}.tar" "${RESULTS_TO_TAR[@]}"
 
 # move unpack the tarball to the BASERESULTSDIR
 cd "$BASERESULTSDIR"
-time tar --keep-newer-files -xf "${PLAI_TMPDIR}/tar_ball_${results_to_tar_suffix}_${SLURM_JOB_ID}.tar"
+time tar --keep-newer-files -xf "${PLAI_TMPDIR}/tar_ball_${results_to_tar_suffix}_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}.tar"
 
 ######################################################################
 
