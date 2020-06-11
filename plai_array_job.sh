@@ -50,8 +50,8 @@ OVERLAY="overlay_${SLURM_JOB_ID}"
 TMP="tmp_${SLURM_JOB_ID}"
 
 # ensure resultsdir exists
-if [ ! -d "results/${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}" ]; then
-    mkdir -p "results_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
+if [ ! -d results ]; then
+    mkdir results
 fi
 
 # make directory that singularity can mount to and use to setup a database
