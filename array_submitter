@@ -11,12 +11,14 @@
 # IF USING MPI WITH SEVERAL "TASKS" - I.E. USING SEVERAL NODES: USE DIFFERENT SCRIPT
 
 # general settings
-PROJECT_DIR="simulator_compilation/raven" # project name
-EXP_NAME="raven_surrogate_ff" # experiment name used by e.g. sacred
+PROJECT_DIR="PROJECT_NAME" # project name
+EXP_NAME="EXP_NAME" # experiment name used by e.g. sacred
 CPUS_PER_TASK=6 # should be no more than 6 per GPU! -- SEE COMPUTE CANADA
 MEM="30G" # G/M is Gigabyte/Megabyte (see cedar on compute canada for amount of memory we can get per core)
 TIME="23:59:00" # <HH:MM:SS>
 GPUS=1
+# PLAI specific arguments - partition (plai/plai_towers/plai_cpus)
+PARTITION="plai"
 
 # an overlay where the container need write permissions
 # (MAKE SURE IT CORRESPONDS WITH WHATEVER IS DEFINED IN SINGULARITY FILE)
@@ -78,7 +80,7 @@ done
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 EXP_DIR="$(dirname "$DIR")" # get parent of parent directory from where this script is called (assumes submitted from exp_dir/hpc_scripts/some_dir)
-RESULTS_MOUNT="/results" # where results is located in the siongularity container
+RESULTS_MOUNT="/code/results" # where results is located in the siongularity container
 
 # LEAVE EMPTY SO THAT WE DO NOT COPY ANYTHING TO SLURM_TMPDIR
 STUFF_TO_TAR=""
