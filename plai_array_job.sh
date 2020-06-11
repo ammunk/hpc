@@ -1,7 +1,5 @@
 #!/bin/bash
 
-#SBATCH --account=rrg-kevinlb
-
 # THIS SCRIPT IS CALLED OUTSIDE USING "sbatch"
 # FOLLOWING ENV VARIABLES HAS TO BE PROVIDED:
 #   - CMD
