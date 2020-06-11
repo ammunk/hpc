@@ -98,7 +98,7 @@ SINGULARITYENV_SLURM_JOB_ID=$SLURM_JOB_ID \
 
 ######################################################################
 
-# Move results back (if needed!)
+# Move results back (if RESULTS_TO_TAR is set)
 
 # MAKE SURE THE RESULTS SAVED HAVE UNIQUE NAMES EITHER USING JOB ID AND
 # OR SOME OTHER WAY - !!!! OTHERWISE STUFF WILL BE OVERWRITTEN !!!!
