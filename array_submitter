@@ -32,7 +32,6 @@ PARTITION="plai"
 OVERLAYDIR_CONTAINER="/overlay"
 
 # container arguments
-CONTAINER_TYPE="singularity" # docker/singularity
 CONTAINER_NAME="container.sif"
 
 # command send to container
