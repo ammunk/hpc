@@ -24,7 +24,7 @@ cd "$BASERESULTSDIR"
 # move data to temporary SLURM DIR which is much faster for I/O
 echo "Copying singularity (${CODE_DIR}/${CONTAINER}) to ${PLAI_TMPDIR}"
 time rsync -av "${CODE_DIR}/${CONTAINER}" "${PLAI_TMPDIR}"
-time rsync -av "${CODE_DIR}/hpc_scripts/array_command_list.txt" "${PLAI_TMPDIR}"
+time rsync -av "${CODE_DIR}/hpc_files/array_command_list.txt" "${PLAI_TMPDIR}"
 
 # replace any "/"-character or spaces with "_" to use as a name
 stuff_to_tar_suffix=$(tr ' |/' '_' <<< ${STUFF_TO_TAR})
