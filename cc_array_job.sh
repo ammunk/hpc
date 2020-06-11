@@ -107,7 +107,7 @@ SINGULARITYENV_SLURM_JOB_ID=$SLURM_JOB_ID \
 
 ######################################################################
 
-if ! [ -z "${RESULTS_TO_TAR}" ]; then
+if  [ ! -z "${RESULTS_TO_TAR}" ]; then
     # if variable is provided make into an array
     IFS=' ' read -a RESULTS_TO_TAR <<< "${RESULTS_TO_TAR[@]}"
     # replace any "/"-character or spaces with "_" to use as a name
