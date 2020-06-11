@@ -80,21 +80,21 @@ echo "RESULTS TO TAR: ${RESULTS_TO_TAR}"
 # using "run" executed the "runscript" specified by the "%runscript"
 # any argument give "CMD" is passed to the runscript
 SINGULARITYENV_SLURM_JOB_ID=$SLURM_JOB_ID \
-                           SINGULARITYENV_SLURM_PROCID=$SLURM_PROCID \
-                           WANDB_RUN_GROUP="CC" \
-                           singularity run \
-                           --nv \
-                           --cleanenv \
-                           -B results:"${RESULTS_MOUNT}" \
-                           -B datasets:/datasets \
-                           -B "${DB}":/db \
-                           -B "${TMP}":/tmp \
-                           -B "${OVERLAY}":"${OVERLAYDIR_CONTAINER}" \
-                           --no-home \
-                           --contain\
-                           --writable-tmpfs \
-                           "$CONTAINER" \
-                           "$CMD"
+    SINGULARITYENV_SLURM_PROCID=$SLURM_PROCID \
+    SINGULARITYENV_WANDB_RUN_GROUP="CC" \
+    singularity run \
+    --nv \
+    --cleanenv \
+    -B results:"${RESULTS_MOUNT}" \
+    -B datasets:/datasets \
+    -B "${DB}":/db \
+    -B "${TMP}":/tmp \
+    -B "${OVERLAY}":"${OVERLAYDIR_CONTAINER}" \
+    --no-home \
+    --contain\
+    --writable-tmpfs \
+    "$CONTAINER" \
+    "$CMD"
 
 ######################################################################
 
