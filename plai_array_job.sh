@@ -1,5 +1,7 @@
 #!/bin/bash
 
+#SBATCH --account=rrg-kevinlb
+
 # THIS SCRIPT IS CALLED OUTSIDE USING "sbatch"
 # FOLLOWING ENV VARIABLES HAS TO BE PROVIDED:
 #   - CMD
@@ -8,6 +10,8 @@
 #   - OVERLAYDIR_CONTAINER
 #   - STUFF_TO_TAR - e.g. move the training data to the PLAI_TMPDIR for traning a network
 #   - RESULTS_TO_TAR - the results we seek to move back from the temporary file; e.g. if we train an inference network we don't need to also move the training data back again
+
+# see eg. https://docs.computecanada.ca/wiki/A_tutorial_on_%27tar%27
 
 PLAI_TMPDIR="/scratch-ssd/amunk_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
 
@@ -21,8 +25,8 @@ cd "$BASERESULTSDIR"
 
 # move data to temporary SLURM DIR which is much faster for I/O
 echo "Copying singularity (${CODE_DIR}/${CONTAINER}) to ${PLAI_TMPDIR}"
-# move singularity file
 time rsync -av "${CODE_DIR}/${CONTAINER}" "${PLAI_TMPDIR}"
+time rsync -av "${CODE_DIR}/hpc_scripts/array_command_list.txt" "${PLAI_TMPDIR}"
 
 # replace any "/"-character or spaces with "_" to use as a name
 stuff_to_tar_suffix=$(tr ' |/' '_' <<< ${STUFF_TO_TAR})
@@ -40,17 +44,20 @@ cd "$PLAI_TMPDIR"
 
 if [ ! -z "${STUFF_TO_TAR}" ]; then
     echo "Moving tarball to slurm tmpdir"
-    time tar -xf "${BASERESULTSDIR}/tar_ball_${stuff_to_tar_suffix}.tar"
+    time tar --keep-newer-files -xf "${BASERESULTSDIR}/tar_ball_${stuff_to_tar_suffix}.tar"
 fi
 
+DB="db_${SLURM_JOB_ID}"
+OVERLAY="overlay_${SLURM_JOB_ID}"
+TMP="tmp_${SLURM_JOB_ID}"
+
 # ensure resultsdir exists
-if [ ! -d results ]; then
-    mkdir results
+if [ ! -d "${RESULTS_TO_TAR}" ]; then
+    mkdir -p "${RESULTS_TO_TAR}"
 fi
 
 # make directory that singularity can mount to and use to setup a database
 # such as postgresql or a monogdb etc.
-
 if [ ! -d "$DB" ]; then
     mkdir "$DB"
 fi
@@ -69,12 +76,13 @@ if [ ! -d datasets ]; then
     mkdir datasets
 fi
 
+CMD=$(sed -n "${SLURM_ARRAY_TASK_ID}p" array_command_list.txt)
 echo "COMMANDS GIVEN: ${CMD}"
 echo "STUFF TO TAR: ${STUFF_TO_TAR}"
 echo "RESULTS TO TAR: ${RESULTS_TO_TAR}"
 
 # --nv option: bind to system libraries (access to GPUS etc.)
-# --no-home and --contain mimics the docker container behavior
+# --no-home and --containall mimics the docker container behavior
 # --cleanenv is crucial to get wandb to work, as local environment variables may cause it to break on some systems
 # without those /home and more will be mounted be default
 # using "run" executed the "runscript" specified by the "%runscript"
@@ -96,13 +104,12 @@ SINGULARITYENV_SLURM_JOB_ID=$SLURM_JOB_ID \
     ${CONTAINER} \
     ${CMD}
 
-
 ######################################################################
 
 # Move results back (if RESULTS_TO_TAR is set)
 
 # MAKE SURE THE RESULTS SAVED HAVE UNIQUE NAMES EITHER USING JOB ID AND
-# OR SOME OTHER WAY - !!!! OTHERWISE STUFF WILL BE OVERWRITEN !!!!
+# OR SOME OTHER WAY - !!!! OTHERWISE STUFF WILL BE OVERWRITTEN !!!!
 
 ######################################################################
 

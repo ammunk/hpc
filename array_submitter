@@ -10,81 +10,78 @@
 
 # IF USING MPI WITH SEVERAL "TASKS" - I.E. USING SEVERAL NODES: USE DIFFERENT SCRIPT
 
-# determine cluster used
-if [[ "$(hostname)" == *"borg"* ]]; then
-    CLUSTER="PLAI"
-elif [[ "$(hostname)" == *"cedar"* ]]; then
-    CLUSTER="CC"
-fi
-
 # general settings
-PROJECT_DIR="PN" # project name
-EXP_NAME="TEST"
-USE_MONGO="FALSE"
-CPUS_PER_TASK=1 # should be no more than 6 per GPU! -- SEE COMPUTE CANADA
-MEM="5G" # G/M is Gigabyte/Megabyte
-TIME="01:00:00" # <HH:MM:MM>
-GPUS=1 # set to 0 to not ask for any
-# PLAI specific arguments - partition (plai/plai_towers/plai_cpus)
-PARTITION="plai"
-
+PROJECT_DIR="simulator_compilation/raven" # project name
+EXP_NAME="raven_surrogate_ff" # experiment name used by e.g. sacred
+CPUS_PER_TASK=6 # should be no more than 6 per GPU! -- SEE COMPUTE CANADA
+MEM="30G" # G/M is Gigabyte/Megabyte (see cedar on compute canada for amount of memory we can get per core)
+TIME="23:59:00" # <HH:MM:SS>
+GPUS=1
 
 # an overlay where the container need write permissions
 # (MAKE SURE IT CORRESPONDS WITH WHATEVER IS DEFINED IN SINGULARITY FILE)
 OVERLAYDIR_CONTAINER="/overlay"
 
 # container arguments
+CONTAINER_TYPE="singularity" # docker/singularity
 CONTAINER_NAME="container.sif"
 
 # command send to container
 CMD_BASE=""
 
-# sweeping
-DOSWEEP=true
+function array_to_pearl () {
+    echo "($(echo "$1" | sed 's/ /, /g'))"
+}
 
-if [[ $DOSWEEP = true ]]; then
-    function array_to_pearl () {
-        echo "($(echo "$1" | sed 's/ /, /g'))"
-    }
+function geometric {
+    ((val = $1))
+    ((mult = $2))
+    ((count = $3))
 
-    CMDs=()
-    # specify options over which to sweep (for instance batch_size)
-    batch_size="64"
-
-    # EXTEND FOR LOOP WITH MORE OPTIONS
-    OPTIONS="$(perl -le '@batch_size = '"$(array_to_pearl "${batch_size}")"';
-                     for $b (@batch_size){
-                         print "batch_size=$b"}')"
-    # create array which splits string on \n from above
-    # readarray -t OPTIONS <<< $OPTIONS # ONLY BASH 4.4+
-    IFS=$'\n' read -rd '' -a OPTIONS <<<"$OPTIONS"
-
-    for option in "${OPTIONS[@]}"; do
-        tmp="${CMD_BASE} ${option}"
-        CMDs+=("$tmp")
+    tmp="$val"
+    while [[ ${count} -gt 0 ]] ; do
+        ((val *= mult))
+        ((count -= 1))
+        tmp="${tmp}, ${val}"
     done
-else
-    CMDs=("$CMD_BASE")
-fi
+    echo $tmp
+}
 
-# number of times to submit
-N=${#CMDs[@]}
-# set seed; should only be done if N=1 (otherwise each job gets same seed variable)
-if [ "$N" -eq "1" ]; then
-    seed=""
-fi
+# specify options over which to sweep (for instance batch_size)
+example1=$(geometric 1 2 10)
+example2="($(seq -s ', ' 1 20))"
+example3="($(seq -s ', ' 25 25 1000))"
+
+# EXTEND FOR LOOP WITH MORE OPTIONS
+OPTIONS="$(perl -le '@ex1 = '"$(array_to_pearl "${example1}")"';
+                        @ex2 ='"$(array_to_pearl "${example2}")"';
+                        @ex3 ='"$(array_to_pearl "${example3}")"';
+                        for my $i (0 .. $#hd){
+                            print "ex1=$ex1[int($i/4)] ".
+                            "ex2=$ex2[int($i/2)] ".
+                            "ex3=$ex3[int($i)]"
+                            }')"
+
+
+# create array which splits string on \n from above
+# readarray -t OPTIONS <<< $OPTIONS # ONLY BASH 4.4+
+IFS=$'\n' read -rd '' -a OPTIONS <<<"$OPTIONS"
+N=${#OPTIONS[@]}
+
+# clear array_command_list.txt before putting thins into it
+> array_command_list.txt
+for option in "${OPTIONS[@]}"; do
+    echo "${CMD_BASE} ${option}" >> array_command_list.txt
+done
 
 # Directory where this script is called
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-EXP_DIR="$(dirname "$DIR")" # get parent directory from where this script is called (assumes submitted from exp_dir/hpc_scripts)
-RESULTS_MOUNT="/code/results" # where results is located in the siongularity container
+EXP_DIR="$(dirname "$DIR")" # get parent of parent directory from where this script is called (assumes submitted from exp_dir/hpc_scripts/some_dir)
+RESULTS_MOUNT="/results" # where results is located in the siongularity container
 
 # LEAVE EMPTY SO THAT WE DO NOT COPY ANYTHING TO SLURM_TMPDIR
 STUFF_TO_TAR=""
-
-# LEAVE EMPTY SO THAT WE DO COPY ENTIRE RESULTS TO BASERESULTSDIR
-RESULTS_TO_TAR=""
 
 # set base directory names to store results from jobs (specific directory will be given in the job script)
 if [ ! -z ${SCRATCH} ]; then
@@ -102,7 +99,7 @@ if [ ! -z ${SCRATCH} ]; then
 
     VARIABLES="CODE_DIR=${EXP_DIR},OVERLAYDIR_CONTAINER=${OVERLAYDIR_CONTAINER},\
 CONTAINER=${CONTAINER_NAME},RESULTS_MOUNT=${RESULTS_MOUNT},\
-STUFF_TO_TAR=${STUFF_TO_TAR},RESULTS_TO_TAR=${RESULTS_TO_TAR},BASERESULTSDIR=${BASERESULTSDIR}"
+STUFF_TO_TAR=${STUFF_TO_TAR},BASERESULTSDIR=${BASERESULTSDIR}"
 
     # SUBMIT JOBS
     for CMD_BASE_N in "${CMDs[@]}"
@@ -114,6 +111,7 @@ STUFF_TO_TAR=${STUFF_TO_TAR},RESULTS_TO_TAR=${RESULTS_TO_TAR},BASERESULTSDIR=${B
                    --cpus-per-task=${CPUS_PER_TASK} \
                    --ntasks-per-core=1 \
                    --ntasks=1 \
+                   --array=1-${N}%20 \
                    --mem=${MEM} \
                    --chdir=${BASERESULTSDIR} \
                    -o ${BASERESULTSDIR}/hpc_output/${EXP_NAME}_%j.out \
@@ -128,13 +126,13 @@ STUFF_TO_TAR=${STUFF_TO_TAR},RESULTS_TO_TAR=${RESULTS_TO_TAR},BASERESULTSDIR=${B
                     sbatch_cmd="${sbatch_cmd} --gres=gpu:${GPUS}"
                 fi
                 sbatch_cmd="${sbatch_cmd} --partition=${PARTITION}"
-                bash -c "sbatch ${sbatch_cmd[@]} ~/hpc/plai_singularity_job.sh"
+                bash -c "sbatch ${sbatch_cmd[@]} ~/hpc/plai_array_job.sh"
             elif [[ "$CLUSTER" = "CC" ]]; then
                 if [[ "$GPUS" != "0" ]]; then
                     sbatch_cmd="${sbatch_cmd} --gres=gpu:${GPUS}"
                     #sbatch_cmd="${sbatch_cmd} --gres=gpu:${GPUS}"
                 fi
-                bash -c "sbatch ${sbatch_cmd[@]} ~/hpc/cc_singularity_job_single_task.sh"
+                bash -c "sbatch ${sbatch_cmd[@]} ~/hpc/cc_array_job.sh"
             fi
             sleep 1 # sleep so that we do not overwhelm the scheduler (SEE e.g. compute canada's website)
         fi

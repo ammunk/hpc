@@ -1,28 +1,26 @@
 #!/bin/bash
 
+#SBATCH --account=rrg-kevinlb
+
 # THIS SCRIPT IS CALLED OUTSIDE USING "sbatch"
 # FOLLOWING ENV VARIABLES HAS TO BE PROVIDED:
 #   - CMD
 #   - CONTAINER
 #   - BASERESULTSDIR
 #   - OVERLAYDIR_CONTAINER
-#   - STUFF_TO_TAR - e.g. move the training data to the PLAI_TMPDIR for traning a network
+#   - STUFF_TO_TAR - e.g. move the training data to the SLURM_TMPDIR for traning a network
 #   - RESULTS_TO_TAR - the results we seek to move back from the temporary file; e.g. if we train an inference network we don't need to also move the training data back again
 
-PLAI_TMPDIR="/scratch-ssd/amunk_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
+# see - https://docs.computecanada.ca/wiki/Using_GPUs_with_Slurm for why we add this
 
-mkdir -p $PLAI_TMPDIR
+module load singularity/3.5
 
-DB="db_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
-OVERLAY="overlay_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
-TMP="tmp_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
-
-cd "$BASERESULTSDIR"
+# see eg. https://docs.computecanada.ca/wiki/A_tutorial_on_%27tar%27
 
 # move data to temporary SLURM DIR which is much faster for I/O
-echo "Copying singularity (${CODE_DIR}/${CONTAINER}) to ${PLAI_TMPDIR}"
-# move singularity file
-time rsync -av "${CODE_DIR}/${CONTAINER}" "${PLAI_TMPDIR}"
+echo "Copying singularity to ${SLURM_TMPDIR}"
+time rsync -av "${CODE_DIR}/${CONTAINER}" "${SLURM_TMPDIR}"
+time rsync -av "${CODE_DIR}/hpc_scripts/surrogate_varying_size/array_command_list.txt" "${SLURM_TMPDIR}"
 
 # replace any "/"-character or spaces with "_" to use as a name
 stuff_to_tar_suffix=$(tr ' |/' '_' <<< ${STUFF_TO_TAR})
@@ -36,21 +34,24 @@ if [ ! -z "${STUFF_TO_TAR}" ]; then
 fi
 
 # go to temporary directory
-cd "$PLAI_TMPDIR"
+cd "$SLURM_TMPDIR"
 
 if [ ! -z "${STUFF_TO_TAR}" ]; then
     echo "Moving tarball to slurm tmpdir"
-    time tar -xf "${BASERESULTSDIR}/tar_ball_${stuff_to_tar_suffix}.tar"
+    time tar --keep-newer-files -xf "${BASERESULTSDIR}/tar_ball_${stuff_to_tar_suffix}.tar"
 fi
 
+DB="db_${SLURM_JOB_ID}"
+OVERLAY="overlay_${SLURM_JOB_ID}"
+TMP="tmp_${SLURM_JOB_ID}"
+
 # ensure resultsdir exists
-if [ ! -d results ]; then
-    mkdir results
+if [ ! -d "results/${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}" ]; then
+    mkdir -p "results/${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
 fi
 
 # make directory that singularity can mount to and use to setup a database
 # such as postgresql or a monogdb etc.
-
 if [ ! -d "$DB" ]; then
     mkdir "$DB"
 fi
@@ -69,40 +70,40 @@ if [ ! -d datasets ]; then
     mkdir datasets
 fi
 
+CMD=$(sed -n "${SLURM_ARRAY_TASK_ID}p" array_command_list.txt)
 echo "COMMANDS GIVEN: ${CMD}"
 echo "STUFF TO TAR: ${STUFF_TO_TAR}"
 echo "RESULTS TO TAR: ${RESULTS_TO_TAR}"
 
 # --nv option: bind to system libraries (access to GPUS etc.)
-# --no-home and --contain mimics the docker container behavior
+# --no-home and --containall mimics the docker container behavior
 # --cleanenv is crucial to get wandb to work, as local environment variables may cause it to break on some systems
 # without those /home and more will be mounted be default
 # using "run" executed the "runscript" specified by the "%runscript"
 # any argument give "CMD" is passed to the runscript
 SINGULARITYENV_SLURM_JOB_ID=$SLURM_JOB_ID \
     SINGULARITYENV_SLURM_PROCID=$SLURM_PROCID \
-    SINGULARITYENV_WANDB_RUN_GROUP="PLAI" \
-    /opt/singularity/bin/singularity run \
+    SINGULARITYENV_WANDB_RUN_GROUP="CC" \
+    singularity run \
     --nv \
     --cleanenv \
     -B results:"${RESULTS_MOUNT}" \
     -B datasets:/datasets \
-    -B ${DB}:/db \
-    -B ${TMP}:/tmp \
-    -B ${OVERLAY}:${OVERLAYDIR_CONTAINER} \
+    -B "${DB}":/db \
+    -B "${TMP}":/tmp \
+    -B "${OVERLAY}":"${OVERLAYDIR_CONTAINER}" \
     --no-home \
-    --contain \
+    --contain\
     --writable-tmpfs \
-    ${CONTAINER} \
-    ${CMD}
-
+    "$CONTAINER" \
+    "$CMD"
 
 ######################################################################
 
 # Move results back (if RESULTS_TO_TAR is set)
 
 # MAKE SURE THE RESULTS SAVED HAVE UNIQUE NAMES EITHER USING JOB ID AND
-# OR SOME OTHER WAY - !!!! OTHERWISE STUFF WILL BE OVERWRITEN !!!!
+# OR SOME OTHER WAY - !!!! OTHERWISE STUFF WILL BE OVERWRITTEN !!!!
 
 ######################################################################
 
@@ -117,13 +118,5 @@ if ! [ -z "${RESULTS_TO_TAR}" ]; then
 
     # move unpack the tarball to the BASERESULTSDIR
     cd "$BASERESULTSDIR"
-    time tar --keep-newer-files -xf "${PLAI_TMPDIR}/tar_ball_${results_to_tar_suffix}_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}.tar"
+    time tar --keep-newer-files -xf "${SLURM_TMPDIR}/tar_ball_${results_to_tar_suffix}_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}.tar"
 fi
-
-######################################################################
-
-# CLEANUP
-
-# remove temporary directories
-rm -rf "${PLAI_TMPDIR}"
-echo "CHECK WHATS IN /scratch-ssd:" && ls /scratch-ssd
