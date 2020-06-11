@@ -10,6 +10,13 @@
 
 # IF USING MPI WITH SEVERAL "TASKS" - I.E. USING SEVERAL NODES: USE DIFFERENT SCRIPT
 
+# determine cluster used
+if [[ "$(hostname)" == *"borg"* ]]; then
+    CLUSTER="PLAI"
+elif [[ "$(hostname)" == *"cedar"* ]]; then
+    CLUSTER="CC"
+fi
+
 # general settings
 PROJECT_DIR="PROJECT_NAME" # project name
 EXP_NAME="EXP_NAME" # experiment name used by e.g. sacred

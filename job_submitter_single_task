@@ -20,7 +20,6 @@ fi
 # general settings
 PROJECT_DIR="PN" # project name
 EXP_NAME="TEST"
-USE_MONGO="FALSE"
 CPUS_PER_TASK=1 # should be no more than 6 per GPU! -- SEE COMPUTE CANADA
 MEM="5G" # G/M is Gigabyte/Megabyte
 TIME="01:00:00" # <HH:MM:MM>
