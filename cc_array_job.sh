@@ -20,7 +20,7 @@ module load singularity/3.5
 # move data to temporary SLURM DIR which is much faster for I/O
 echo "Copying singularity to ${SLURM_TMPDIR}"
 time rsync -av "${CODE_DIR}/${CONTAINER}" "${SLURM_TMPDIR}"
-time rsync -av "${CODE_DIR}/hpc_scripts/surrogate_varying_size/array_command_list.txt" "${SLURM_TMPDIR}"
+time rsync -av "${CODE_DIR}/hpc_files/array_command_list.txt" "${SLURM_TMPDIR}"
 
 # replace any "/"-character or spaces with "_" to use as a name
 stuff_to_tar_suffix=$(tr ' |/' '_' <<< ${STUFF_TO_TAR})
@@ -46,8 +46,8 @@ OVERLAY="overlay_${SLURM_JOB_ID}"
 TMP="tmp_${SLURM_JOB_ID}"
 
 # ensure resultsdir exists
-if [ ! -d "results/${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}" ]; then
-    mkdir -p "results/${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
+if [ ! -d results ]; then
+    mkdir results
 fi
 
 # make directory that singularity can mount to and use to setup a database
