@@ -117,7 +117,6 @@ STUFF_TO_TAR=${STUFF_TO_TAR},BASERESULTSDIR=${BASERESULTSDIR}"
                 --cpus-per-task=${CPUS_PER_TASK} \
                 --ntasks-per-core=1 \
                 --ntasks=1 \
-                --array=1-${N}%20 \
                 --mem=${MEM} \
                 --chdir=${BASERESULTSDIR} \
                 -o ${BASERESULTSDIR}/hpc_output/${EXP_NAME}_%j.out \
@@ -131,13 +130,14 @@ STUFF_TO_TAR=${STUFF_TO_TAR},BASERESULTSDIR=${BASERESULTSDIR}"
             if [[ "$GPUS" != "0" ]]; then
                 sbatch_cmd="${sbatch_cmd} --gres=gpu:${GPUS}"
             fi
-            sbatch_cmd="${sbatch_cmd} --partition=${PARTITION}"
+            sbatch_cmd="${sbatch_cmd} --array=1-${N}%10 --partition=${PARTITION}"
             bash -c "sbatch ${sbatch_cmd[@]} ~/hpc/plai_array_job.sh"
         elif [[ "$CLUSTER" = "CC" ]]; then
             if [[ "$GPUS" != "0" ]]; then
-                sbatch_cmd="${sbatch_cmd} --gres=gpu:${GPUS}"
+                sbatch_cmd="${sbatch_cmd} --gres=gpu:v100l${GPUS}"
                 #sbatch_cmd="${sbatch_cmd} --gres=gpu:${GPUS}"
             fi
+            sbatch_cmd="${sbatch_cmd} --array=1-${N}"
             bash -c "sbatch ${sbatch_cmd[@]} ~/hpc/cc_array_job.sh"
         fi
         sleep 1 # sleep so that we do not overwhelm the scheduler (SEE e.g. compute canada's website)
