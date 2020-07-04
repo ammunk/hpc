@@ -24,7 +24,7 @@ cd "$BASERESULTSDIR"
 # move data to temporary SLURM DIR which is much faster for I/O
 echo "Copying singularity (${CODE_DIR}/${CONTAINER}) to ${PLAI_TMPDIR}"
 time rsync -av "${CODE_DIR}/${CONTAINER}" "${PLAI_TMPDIR}"
-time rsync -av "${CODE_DIR}/hpc_files/array_command_list.txt" "${PLAI_TMPDIR}"
+time rsync -av "${CODE_DIR}/hpc_files/array_command_list_${EXP_NAME}.txt" "${PLAI_TMPDIR}"
 
 # replace any "/"-character or spaces with "_" to use as a name
 stuff_to_tar_suffix=$(tr ' |/' '_' <<< ${STUFF_TO_TAR})
@@ -74,7 +74,7 @@ if [ ! -d datasets ]; then
     mkdir datasets
 fi
 
-CMD=$(sed -n "${SLURM_ARRAY_TASK_ID}p" array_command_list.txt)
+CMD=$(sed -n "${SLURM_ARRAY_TASK_ID}p" "array_command_list_${EXP_NAME}")
 echo "COMMANDS GIVEN: ${CMD}"
 echo "STUFF TO TAR: ${STUFF_TO_TAR}"
 echo "RESULTS TO TAR: ${RESULTS_TO_TAR}"

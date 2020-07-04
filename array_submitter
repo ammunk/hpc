@@ -77,9 +77,10 @@ IFS=$'\n' read -rd '' -a OPTIONS <<<"$OPTIONS"
 N=${#OPTIONS[@]}
 
 # clear array_command_list.txt before putting thins into it
-> array_command_list.txt
+array_commands="array_command_list_${EXP_NAME}.txt"
+> "${array_commands}"
 for option in "${OPTIONS[@]}"; do
-    echo "${CMD_BASE} ${option}" >> array_command_list.txt
+    echo "${CMD_BASE} ${option}" >> "${array_commands}"
 done
 
 # Directory where this script is called
