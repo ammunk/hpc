@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --account=rrg-kevinlb
+#SBATCH --account=def-fwood
 
 # THIS SCRIPT IS CALLED OUTSIDE USING "sbatch"
 # FOLLOWING ENV VARIABLES HAS TO BE PROVIDED:
