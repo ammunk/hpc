@@ -91,12 +91,12 @@ if [ ! -z ${SCRATCH} ]; then
     BASERESULTSDIR="${SCRATCH}/${PROJECT_DIR}"
 
     # create hpc_output directory if it does not exist
-    if [ ! -d "${BASERESULTSDIR}/hpc_output" ]; then
-        mkdir -p "${BASERESULTSDIR}/hpc_output"
+    if [ ! -d "${BASERESULTSDIR}/${EXP_NAME}/hpc_output" ]; then
+        mkdir -p "${BASERESULTSDIR}/${EXP_NAME}/hpc_output"
     fi
 
-    if [ ! -d "${BASERESULTSDIR}/results" ]; then
-        mkdir -p "${BASERESULTSDIR}/results"
+    if [ ! -d "${BASERESULTSDIR}/${EXP_NAME}/results" ]; then
+        mkdir -p "${BASERESULTSDIR}/${EXP_NAME}/results"
     fi
 
     VARIABLES="CODE_DIR=${EXP_DIR},OVERLAYDIR_CONTAINER=${OVERLAYDIR_CONTAINER},\

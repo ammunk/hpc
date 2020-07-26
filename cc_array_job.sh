@@ -118,6 +118,6 @@ if  [ ! -z "${RESULTS_TO_TAR}" ]; then
     time tar -cf "tar_ball_${results_to_tar_suffix}_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}.tar" "${RESULTS_TO_TAR[@]}"
 
     # move unpack the tarball to the BASERESULTSDIR
-    cd "$BASERESULTSDIR"
+    cd "${BASERESULTSDIR}/${EXP_NAME}"
     time tar --keep-newer-files -xf "${SLURM_TMPDIR}/tar_ball_${results_to_tar_suffix}_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}.tar"
 fi
