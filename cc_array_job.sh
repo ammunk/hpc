@@ -44,6 +44,7 @@ fi
 DB="db_${SLURM_JOB_ID}"
 OVERLAY="overlay_${SLURM_JOB_ID}"
 TMP="tmp_${SLURM_JOB_ID}"
+HOMER_OVERLAY="home_overlay_${SLURM_JOB_ID}"
 
 # ensure resultsdir exists
 if [ ! -d results ]; then
@@ -70,8 +71,8 @@ if [ ! -d datasets ]; then
     mkdir datasets
 fi
 
-if [ ! -d home_overlay ]; then
-    mkdir home_overlay
+if [ ! -d "$HOMER_OVERLAY" ]; then
+    mkdir "$HOMER_OVERLAY"
 fi
 
 CMD=$(sed -n "${SLURM_ARRAY_TASK_ID}p" "array_command_list_${EXP_NAME}.txt")
@@ -95,7 +96,7 @@ SINGULARITYENV_SLURM_JOB_ID=$SLURM_JOB_ID \
     --cleanenv \
     -B results:"${RESULTS_MOUNT}" \
     -B datasets:/datasets \
-    -B home_overlay:"/home/${USER}" \
+    -B "${HOMER_OVERLAY}":"/home/${USER}" \
     -B "${DB}":/db \
     -B "${TMP}":/tmp \
     -B "${OVERLAY}":"${OVERLAYDIR_CONTAINER}" \
