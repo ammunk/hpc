@@ -60,10 +60,6 @@ if [ ! -d "$DB" ]; then
     mkdir "$DB"
 fi
 
-if [ ! -d home_overlay ]; then
-    mkdir home_overlay
-fi
-
 # make overlay directory, which may or may not be used
 if [ ! -d "$OVERLAY" ]; then
     mkdir "$OVERLAY"
@@ -76,6 +72,10 @@ fi
 
 if [ ! -d datasets ]; then
     mkdir datasets
+fi
+
+if [ ! -d home_overlay ]; then
+    mkdir home_overlay
 fi
 
 CMD=$(sed -n "${SLURM_ARRAY_TASK_ID}p" "array_command_list_${EXP_NAME}.txt")
