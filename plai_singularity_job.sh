@@ -69,6 +69,10 @@ if [ ! -d datasets ]; then
     mkdir datasets
 fi
 
+if [ ! -d home_overlay ]; then
+    mkdir home_overlay
+fi
+
 echo "COMMANDS GIVEN: ${CMD}"
 echo "STUFF TO TAR: ${STUFF_TO_TAR}"
 echo "RESULTS TO TAR: ${RESULTS_TO_TAR}"
@@ -81,6 +85,7 @@ echo "RESULTS TO TAR: ${RESULTS_TO_TAR}"
 # any argument give "CMD" is passed to the runscript
 SINGULARITYENV_SLURM_JOB_ID=$SLURM_JOB_ID \
     SINGULARITYENV_SLURM_PROCID=$SLURM_PROCID \
+    SINGULARITYENV_WANDB_ENTITY="Muffiuz" \
     /opt/singularity/bin/singularity run \
     --nv \
     --cleanenv \
@@ -89,6 +94,7 @@ SINGULARITYENV_SLURM_JOB_ID=$SLURM_JOB_ID \
     -B ${DB}:/db \
     -B ${TMP}:/tmp \
     -B ${OVERLAY}:${OVERLAYDIR_CONTAINER} \
+    -B home_overlay:"/home/${USER}" \
     --no-home \
     --contain \
     --writable-tmpfs \

@@ -60,6 +60,10 @@ if [ ! -d "$DB" ]; then
     mkdir "$DB"
 fi
 
+if [ ! -d home_overlay ]; then
+    mkdir home_overlay
+fi
+
 # make overlay directory, which may or may not be used
 if [ ! -d "$OVERLAY" ]; then
     mkdir "$OVERLAY"
@@ -89,11 +93,13 @@ SINGULARITYENV_SLURM_JOB_ID=$SLURM_JOB_ID \
     SINGULARITYENV_SLURM_PROCID=$SLURM_PROCID \
     SINGULARITYENV_SLURM_ARRAY_JOB_ID=$SLURM_ARRAY_JOB_ID \
     SINGULARITYENV_SLURM_ARRAY_TASK_ID=$SLURM_ARRAY_TASK_ID \
+    SINGULARITYENV_WANDB_ENTITY="Muffiuz" \
     /opt/singularity/bin/singularity run \
     --nv \
     --cleanenv \
     -B results:"${RESULTS_MOUNT}" \
     -B datasets:/datasets \
+    -B home_overlay:"/home/${USER}" \
     -B ${DB}:/db \
     -B ${TMP}:/tmp \
     -B ${OVERLAY}:${OVERLAYDIR_CONTAINER} \
