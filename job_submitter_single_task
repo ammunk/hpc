@@ -13,7 +13,7 @@
 # determine cluster used
 if [[ "$(hostname)" == *"borg"* ]]; then
     CLUSTER="PLAI"
-elif [[ "$(hostname)" == *"cedar"* ]]; then
+elif [[ "$(hostname)" == *"cedar"* ]] || [[ "$(hostname)" == *"gra"* ]]; then
     CLUSTER="CC"
 fi
 

@@ -13,7 +13,7 @@
 # determine cluster used
 if [[ "$(hostname)" == *"borg"* ]]; then
     CLUSTER="PLAI"
-elif [[ "$(hostname)" == *"cedar"* ]]; then
+elif [[ "$(hostname)" == *"cedar"* ]] || [[ "$(hostname)" == *"gra"* ]]; then
     CLUSTER="CC"
 fi
 
@@ -21,7 +21,7 @@ fi
 PROJECT_DIR="PROJECT_NAME" # project name
 EXP_NAME="EXP_NAME" # experiment name used by e.g. sacred
 CPUS_PER_TASK=6 # should be no more than 6 per GPU! -- SEE COMPUTE CANADA
-MEM="30G" # G/M is Gigabyte/Megabyte (see cedar on compute canada for amount of memory we can get per core)
+elif [[ "$(hostname)" == *"cedar"* ]] || [[ "$(hostname)" == *"gra"* ]]; then
 TIME="23:59:00" # <HH:MM:SS>
 GPUS=1
 # PLAI specific arguments - partition (plai/plai_towers/plai_cpus)
