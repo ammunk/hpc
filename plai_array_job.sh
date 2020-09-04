@@ -96,7 +96,7 @@ SINGULARITYENV_SLURM_JOB_ID=$SLURM_JOB_ID \
     --cleanenv \
     -B results:"${RESULTS_MOUNT}" \
     -B datasets:/datasets \
-    -B "${HOME_OVERLAY}":"/home/${USER}" \
+    -B "${HOME_OVERLAY}":"${HOME}" \
     -B ${DB}:/db \
     -B ${TMP}:/tmp \
     -B ${OVERLAY}:${OVERLAYDIR_CONTAINER} \
