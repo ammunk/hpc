@@ -18,7 +18,7 @@ mkdir -p $PLAI_TMPDIR
 DB="db_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
 OVERLAY="overlay_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
 TMP="tmp_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
-HOMER_OVERLAY="home_overlay_${SLURM_JOB_ID}"
+HOME_OVERLAY="home_overlay_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
 
 cd "$BASERESULTSDIR"
 
@@ -46,10 +46,6 @@ if [ ! -z "${STUFF_TO_TAR}" ]; then
     time tar --keep-newer-files -xf "${BASERESULTSDIR}/tar_ball_${stuff_to_tar_suffix}.tar"
 fi
 
-DB="db_${SLURM_JOB_ID}"
-OVERLAY="overlay_${SLURM_JOB_ID}"
-TMP="tmp_${SLURM_JOB_ID}"
-
 # ensure resultsdir exists
 if [ ! -d results ]; then
     mkdir results
@@ -75,8 +71,8 @@ if [ ! -d datasets ]; then
     mkdir datasets
 fi
 
-if [ ! -d "$HOMER_OVERLAY" ]; then
-    mkdir "$HOMER_OVERLAY"
+if [ ! -d "$HOME_OVERLAY" ]; then
+    mkdir "$HOME_OVERLAY"
 fi
 
 CMD=$(sed -n "${SLURM_ARRAY_TASK_ID}p" "array_command_list_${EXP_NAME}.txt")
@@ -100,7 +96,7 @@ SINGULARITYENV_SLURM_JOB_ID=$SLURM_JOB_ID \
     --cleanenv \
     -B results:"${RESULTS_MOUNT}" \
     -B datasets:/datasets \
-    -B "${HOMER_OVERLAY}":"/home/${USER}" \
+    -B "${HOME_OVERLAY}":"/home/${USER}" \
     -B ${DB}:/db \
     -B ${TMP}:/tmp \
     -B ${OVERLAY}:${OVERLAYDIR_CONTAINER} \

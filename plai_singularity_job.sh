@@ -16,7 +16,7 @@ mkdir -p $PLAI_TMPDIR
 DB="db_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
 OVERLAY="overlay_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
 TMP="tmp_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
-HOMER_OVERLAY="home_overlay_${SLURM_JOB_ID}"
+HOME_OVERLAY="home_overlay_${SLURM_JOB_ID}"
 
 cd "$BASERESULTSDIR"
 
@@ -70,8 +70,8 @@ if [ ! -d datasets ]; then
     mkdir datasets
 fi
 
-if [ ! -d "$HOMER_OVERLAY" ]; then
-    mkdir "$HOMER_OVERLAY"
+if [ ! -d "$HOME_OVERLAY" ]; then
+    mkdir "$HOME_OVERLAY"
 fi
 
 echo "COMMANDS GIVEN: ${CMD}"
@@ -95,7 +95,7 @@ SINGULARITYENV_SLURM_JOB_ID=$SLURM_JOB_ID \
     -B ${DB}:/db \
     -B ${TMP}:/tmp \
     -B ${OVERLAY}:${OVERLAYDIR_CONTAINER} \
-    -B "${HOMER_OVERLAY}":"/home/${USER}" \
+    -B "${HOME_OVERLAY}":"/home/${USER}" \
     --no-home \
     --contain \
     --writable-tmpfs \
