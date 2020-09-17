@@ -1,0 +1,7 @@
+#!/usr/bin/bash
+for node in {00..12}; do
+    echo $node
+    # sbatch --ntasks=1 --job-name="cleanup-plai${node}" \
+    #     --time=1:00 --nodelist=plai"${node}" \
+    #    plai_cleanup
+done
