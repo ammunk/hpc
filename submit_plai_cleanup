@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 for node in {00..12}; do
-    sbatch --ntasks=1 --job-name="cleanup-plai${node}" \
+    sbatch --ntasks=1 --job-name="plai${node}-cleanup" \
         --partition=plai \
         --time=1:00 --nodelist="plai${node}" \
         -o hpc_output/${EXP_NAME}_%j.out \
