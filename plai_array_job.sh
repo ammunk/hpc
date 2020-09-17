@@ -101,7 +101,7 @@ SINGULARITYENV_SLURM_JOB_ID=$SLURM_JOB_ID \
     -B ${TMP}:/tmp \
     -B ${OVERLAY}:${OVERLAYDIR_CONTAINER} \
     --no-home \
-    --contain \
+    --containall \
     --writable-tmpfs \
     ${CONTAINER} \
     ${CMD}
