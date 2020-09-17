@@ -3,6 +3,6 @@ for node in {00..12}; do
     sbatch --ntasks=1 --job-name="plai${node}-cleanup" \
         --partition=plai \
         --time=1:00 --nodelist="plai${node}" \
-        -o hpc_output/${EXP_NAME}_%j.out \
+        -o hpc_output/cleanup_plai"${node}"_%j.out \
        plai_cleanup.sh
 done
