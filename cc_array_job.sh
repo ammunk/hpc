@@ -47,8 +47,16 @@ TMP="tmp_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
 HOME_OVERLAY="home_overlay_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
 
 # ensure resultsdir exists
-if [ ! -d results ]; then
-    mkdir results
+if [ ! -z "$RESULTSDIR" ]; then
+    if [ ! -d "$RESULTSDIR" ]; then
+        mkdir "$RESULTSDIR"
+    fi
+else
+    RESULTSDIR="${BASERESULTSDIR}/${EXP_NAME}/${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}_results"
+    if [ ! -d "$RESULTSDIR" ]; then
+        mkdir -p "$RESULTSDIR"
+    fi
+    RESULTS_TO_TAR=""
 fi
 
 # make directory that singularity can mount to and use to setup a database
@@ -94,7 +102,7 @@ SINGULARITYENV_SLURM_JOB_ID=$SLURM_JOB_ID \
     singularity run \
     --nv \
     --cleanenv \
-    -B results:"${RESULTS_MOUNT}" \
+    -B "$RESULTSDIR":"${RESULTS_MOUNT}" \
     -B datasets:/datasets \
     -B "${HOME_OVERLAY}":"${HOME}" \
     -B "${DB}":/db \
