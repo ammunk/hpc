@@ -59,6 +59,11 @@ else
     RESULTS_TO_TAR=""
 fi
 
+# If no datasets location is provided mount in singularity container's root
+if [ -z "$DATASETS_MOUNT" ]; then
+    DATASETS_MOUNT=/datasets
+fi
+
 # make directory that singularity can mount to and use to setup a database
 # such as postgresql or a monogdb etc.
 if [ ! -d "$DB" ]; then
@@ -103,7 +108,7 @@ SINGULARITYENV_SLURM_JOB_ID=$SLURM_JOB_ID \
     --nv \
     --cleanenv \
     -B "$RESULTSDIR":"${RESULTS_MOUNT}" \
-    -B datasets:/datasets \
+    -B datasets:"${DATASETS_MOUNT}" \
     -B "${HOME_OVERLAY}":"${HOME}" \
     -B "${DB}":/db \
     -B "${TMP}":/tmp \

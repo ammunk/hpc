@@ -59,6 +59,11 @@ else
     RESULTS_TO_TAR=""
 fi
 
+# If no datasets location is provided mount in singularity container's root
+if [ -z "$DATASET_MOUNT" ]; then
+    DATASET_MOUNT=/datasets
+fi
+
 # make directory that singularity can mount to and use to setup a database
 # such as postgresql or a monogdb etc.
 if [ ! -d "$DB" ]; then
