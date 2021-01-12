@@ -92,6 +92,8 @@ CMD=$(sed -n "${SLURM_ARRAY_TASK_ID}p" "array_command_list_${EXP_NAME}.txt")
 echo "COMMANDS GIVEN: ${CMD}"
 echo "STUFF TO TAR: ${STUFF_TO_TAR}"
 echo "RESULTS TO TAR: ${RESULTS_TO_TAR}"
+echo "DATASET MOUNT: ${DATASETS_MOUNT}"
+echo "datasets contain: $(ls datasets)"
 
 # --nv option: bind to system libraries (access to GPUS etc.)
 # --no-home and --containall mimics the docker container behavior
