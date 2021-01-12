@@ -59,11 +59,6 @@ else
     RESULTS_TO_TAR=""
 fi
 
-# If no datasets location is provided mount in singularity container's root
-if [ -z "$DATASETS_MOUNT" ]; then
-    DATASETS_MOUNT=/datasets
-fi
-
 # make directory that singularity can mount to and use to setup a database
 # such as postgresql or a monogdb etc.
 if [ ! -d "$DB" ]; then
@@ -92,8 +87,6 @@ CMD=$(sed -n "${SLURM_ARRAY_TASK_ID}p" "array_command_list_${EXP_NAME}.txt")
 echo "COMMANDS GIVEN: ${CMD}"
 echo "STUFF TO TAR: ${STUFF_TO_TAR}"
 echo "RESULTS TO TAR: ${RESULTS_TO_TAR}"
-echo "DATASET MOUNT: ${DATASETS_MOUNT}"
-echo "datasets contain: $(ls datasets)"
 
 # --nv option: bind to system libraries (access to GPUS etc.)
 # --no-home and --containall mimics the docker container behavior
@@ -110,7 +103,7 @@ SINGULARITYENV_SLURM_JOB_ID=$SLURM_JOB_ID \
     --nv \
     --cleanenv \
     -B "$RESULTSDIR":"${RESULTS_MOUNT}" \
-    -B datasets:"${DATASETS_MOUNT}" \
+    -B datasets:/datasets \
     -B "${HOME_OVERLAY}":"${HOME}" \
     -B "${DB}":/db \
     -B "${TMP}":/tmp \
