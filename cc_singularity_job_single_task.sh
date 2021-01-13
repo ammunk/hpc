@@ -23,20 +23,20 @@ if [[ "${BASEDIR}" == *"scratch"* ]]; then
     time rsync -av "${CODE_DIR}/${CONTAINER}" "${SLURM_TMPDIR}"
 
     # replace any "/"-character or spaces with "_" to use as a name
-    stuff_to_tar_suffix=$(tr ' |/' '_' <<< ${STUFF_TO_TAR})
+    stuff_to_tar_suffix=$(tr ' |/' '_' <<< ${STUFF_TO_TMP})
 
-    if [ ! -z "${STUFF_TO_TAR}" ]; then
+    if [ ! -z "${STUFF_TO_TMP}" ]; then
         if [ ! -f "tar_ball_${stuff_to_tar_suffix}.tar" ]; then
             # make tarball in $BASEDIR
             echo "Creating tarball"
-            time tar -cf "tar_ball_${stuff_to_tar_suffix}.tar" $STUFF_TO_TAR
+            time tar -cf "tar_ball_${stuff_to_tar_suffix}.tar" $STUFF_TO_TMP
         fi
     fi
 
     # go to temporary directory
     cd "$SLURM_TMPDIR"
 
-    if [ ! -z "${STUFF_TO_TAR}" ]; then
+    if [ ! -z "${STUFF_TO_TMP}" ]; then
         echo "Moving tarball to slurm tmpdir"
         time tar --keep-newer-files -xf "${BASEDIR}/tar_ball_${stuff_to_tar_suffix}.tar"
     fi
@@ -76,7 +76,7 @@ if [[ "${BASEDIR}" == *"scratch"* ]]; then
     fi
 
     echo "COMMANDS GIVEN: ${CMD}"
-    echo "STUFF TO TAR: ${STUFF_TO_TAR}"
+    echo "STUFF TO TAR: ${STUFF_TO_TMP}"
     echo "RESULTS TO TAR: ${RESULTS_TO_SCRATCH}"
 
     # --nv option: bind to system libraries (access to GPUS etc.)
@@ -95,7 +95,7 @@ if [[ "${BASEDIR}" == *"scratch"* ]]; then
         -B datasets:/datasets \
         -B "${DB}":/db \
         -B "${TMP}":/tmp \
-        -B "${OVERLAY}":"${OVERLAYDIR_CONTAINER}" \
+        -B "${OVERLAY}":"${WORKDIR_MOUNT}" \
         -B "${HOME_OVERLAY}":"${HOME}" \
         --no-home \
         --contain\
