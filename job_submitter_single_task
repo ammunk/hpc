@@ -21,19 +21,23 @@ fi
 PROJECT_DIR="PN" # project name
 EXP_NAME="TEST"
 CPUS_PER_TASK=1 # should be no more than 6 per GPU! -- SEE COMPUTE CANADA
+ACCOUNT='rrg-kevinlb' # def-fwood or rrg-kevinlb
 MEM="5G" # G/M is Gigabyte/Megabyte
 TIME="01:00:00" # <HH:MM:MM>
 GPUS=1 # set to 0 to not ask for any
 # PLAI specific arguments - partition (plai/plai_towers/plai_cpus)
 PARTITION="plai"
 
-
 # an overlay where the container need write permissions
 # (MAKE SURE IT CORRESPONDS WITH WHATEVER IS DEFINED IN SINGULARITY FILE)
-OVERLAYDIR_CONTAINER="/overlay"
-
+WORKDIR_MOUNT="/workdir"
+RESULTS_MOUNT="/results" # where results is located in the singularity container
 # container arguments
 CONTAINER_NAME="container.sif"
+# LEAVE EMPTY SO THAT WE DO NOT COPY ANYTHING TO SLURM_TMPDIR
+STUFF_TO_TMP=""
+# LEAVE EMPTY SO THAT WE DO COPY ENTIRE RESULTS TO BASEDIR
+RESULTS_TO_SCRATCH=""
 
 # command send to container
 CMD_BASE=""
@@ -77,31 +81,25 @@ fi
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 EXP_DIR="$(dirname "$DIR")" # get parent directory from where this script is called (assumes submitted from exp_dir/hpc_scripts)
-RESULTS_MOUNT="/code/results" # where results is located in the siongularity container
-
-# LEAVE EMPTY SO THAT WE DO NOT COPY ANYTHING TO SLURM_TMPDIR
-STUFF_TO_TAR=""
-
-# LEAVE EMPTY SO THAT WE DO COPY ENTIRE RESULTS TO BASERESULTSDIR
-RESULTS_TO_TAR=""
 
 # set base directory names to store results from jobs (specific directory will be given in the job script)
 if [ ! -z ${SCRATCH} ]; then
 
-    BASERESULTSDIR="${SCRATCH}/${PROJECT_DIR}"
+    BASEDIR="${SCRATCH}/${PROJECT_DIR}"
 
     # create hpc_output directory if it does not exist
-    if [ ! -d "${BASERESULTSDIR}/${EXP_NAME}/hpc_output" ]; then
-        mkdir -p "${BASERESULTSDIR}/${EXP_NAME}/hpc_output"
+    if [ ! -d "${BASEDIR}/${EXP_NAME}/hpc_output" ]; then
+        mkdir -p "${BASEDIR}/${EXP_NAME}/hpc_output"
     fi
 
-    if [ ! -d "${BASERESULTSDIR}/${EXP_NAME}/results" ]; then
-        mkdir -p "${BASERESULTSDIR}/${EXP_NAME}/results"
+    if [ ! -d "${BASEDIR}/${EXP_NAME}/results" ]; then
+        mkdir -p "${BASEDIR}/${EXP_NAME}/results"
     fi
 
-    VARIABLES="CODE_DIR=${EXP_DIR},OVERLAYDIR_CONTAINER=${OVERLAYDIR_CONTAINER},\
+    VARIABLES="CODE_DIR=${EXP_DIR},WORKDIR_MOUNT=${WORKDIR_MOUNT},\
 CONTAINER=${CONTAINER_NAME},RESULTS_MOUNT=${RESULTS_MOUNT},\
-STUFF_TO_TAR=${STUFF_TO_TAR},RESULTS_TO_TAR=${RESULTS_TO_TAR},BASERESULTSDIR=${BASERESULTSDIR}"
+STUFF_TO_TMP=${STUFF_TO_TMP},RESULTS_TO_SCRATCH=${RESULTS_TO_SCRATCH},\
+BASEDIR=${BASEDIR}"
 
     # SUBMIT JOBS
     for CMD_BASE_N in "${CMDs[@]}"
@@ -114,8 +112,8 @@ STUFF_TO_TAR=${STUFF_TO_TAR},RESULTS_TO_TAR=${RESULTS_TO_TAR},BASERESULTSDIR=${B
                    --ntasks-per-core=1 \
                    --ntasks=1 \
                    --mem=${MEM} \
-                   --chdir=${BASERESULTSDIR} \
-                   -o ${BASERESULTSDIR}/${EXP_NAME}/hpc_output/${EXP_NAME}_%j.out \
+                   --chdir=${BASEDIR} \
+                   -o ${BASEDIR}/${EXP_NAME}/hpc_output/${EXP_NAME}_%j.out \
                    --export=ALL,CMD=\"${CMD_N}\",\"${VARIABLES}\",EXP_NAME=${EXP_NAME}"
 
         re='^[0-9]+$'
@@ -133,6 +131,7 @@ STUFF_TO_TAR=${STUFF_TO_TAR},RESULTS_TO_TAR=${RESULTS_TO_TAR},BASERESULTSDIR=${B
                     sbatch_cmd="${sbatch_cmd} --gres=gpu:${GPUS}"
                     #sbatch_cmd="${sbatch_cmd} --gres=gpu:${GPUS}"
                 fi
+                sbatch_cmd="${sbatch_cmd} --account=${ACCOUNT}"
                 bash -c "sbatch ${sbatch_cmd[@]} ~/hpc/cc_singularity_job_single_task.sh"
             fi
             sleep 1 # sleep so that we do not overwhelm the scheduler (SEE e.g. compute canada's website)
