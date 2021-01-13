@@ -78,7 +78,7 @@ if [[ "${BASEDIR}" == *"scratch"* ]]; then
     fi
 
     echo "COMMANDS GIVEN: ${CMD}"
-    echo "STUFF TO TAR: ${STUFF_TO_TMP}"
+    echo "STUFF TO TMP: ${STUFF_TO_TMP}"
     echo "RESULTS TO TAR: ${RESULTS_TO_SCRATCH}"
 
     # --nv option: bind to system libraries (access to GPUS etc.)

@@ -79,7 +79,7 @@ if [[ "${BASEDIR}" == *"scratch"* ]]; then
 
     CMD=$(sed -n "${SLURM_ARRAY_TASK_ID}p" "continue_jobs_commands.txt")
     echo "COMMANDS GIVEN: ${CMD}"
-    echo "STUFF TO TAR: ${STUFF_TO_TMP}"
+    echo "STUFF TO TMP: ${STUFF_TO_TMP}"
     echo "RESULTS TO TAR: ${RESULTS_TO_TAR}"
 
     # --nv option: bind to system libraries (access to GPUS etc.)

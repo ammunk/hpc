@@ -10,7 +10,7 @@
 #   - CONTAINER
 #   - BASERESULTSDIR
 #   - OVERLAYDIR_CONTAINER
-#   - STUFF_TO_TAR - e.g. move the training data to the SLURM_TMPDIR for traning a network
+#   - STUFF_TO_TMP - e.g. move the training data to the SLURM_TMPDIR for traning a network
 #   - RESULTS_TO_TAR - the results we seek to move back from the temporary file; e.g. if we train an inference network we don't need to also move the training data back again
 
 # see - https://docs.computecanada.ca/wiki/Using_GPUs_with_Slurm for why we add this
@@ -41,20 +41,20 @@ echo "Copying singularity to ${SLURM_TMPDIR}"
 time rsync -av "$CONTAINER" "$SLURM_TMPDIR"
 
 # replace any "/"-character or spaces with "_" to use as a name
-stuff_to_tar_suffix=$(tr ' |/' '_' <<< ${STUFF_TO_TAR})
+stuff_to_tar_suffix=$(tr ' |/' '_' <<< ${STUFF_TO_TMP})
 
-if [ ! -z "${STUFF_TO_TAR}" ]; then
+if [ ! -z "${STUFF_TO_TMP}" ]; then
     if [ ! -f "tar_ball_${stuff_to_tar_suffix}.tar" ]; then
         # make tarball in $BASERESULTSDIR
         echo "Creating tarball"
-        time tar -cf "tar_ball_${stuff_to_tar_suffix}.tar" $STUFF_TO_TAR
+        time tar -cf "tar_ball_${stuff_to_tar_suffix}.tar" $STUFF_TO_TMP
     fi
 fi
 
 # go to temporary directory
 cd "$SLURM_TMPDIR"
 
-if [ ! -z "${STUFF_TO_TAR}" ]; then
+if [ ! -z "${STUFF_TO_TMP}" ]; then
     echo "Moving tarball to slurm tmpdir"
     time tar -xf "${BASERESULTSDIR}/tar_ball_${stuff_to_tar_suffix}.tar"
 fi
@@ -95,7 +95,7 @@ fi
 IFS=' ' read -a srun_options <<< "$srun_options"
 
 counter=1
-echo "STUFF TO TAR: ${STUFF_TO_TAR}"
+echo "STUFF TO TMP: ${STUFF_TO_TMP}"
 echo "RESULTS TO TAR: ${RESULTS_TO_TAR}"
 for cmd in "${CMDs[@]}"; do
     echo "COMMANDS GIVEN: ${cmd}"
