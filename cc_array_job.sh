@@ -9,7 +9,6 @@
 #   - WORKDIR_MOUNT - directory in the singularity container where code will be run
 #   - RESULTS_MOUNT - directory in the singularity container where results will be saved
 #   - STUFF_TO_TMP - e.g. move the training data to the SLURM_TMPDIR for traning a network
-#   - RESULTS_TO_SCRATCH - the results we seek to move back from the temporary directory to a **/scratch location
 
 # see - https://docs.computecanada.ca/wiki/Using_GPUs_with_Slurm for why we add this
 
