@@ -2,7 +2,6 @@
 
 # THIS SCRIPT IS CALLED OUTSIDE USING "sbatch"
 # FOLLOWING ENV VARIABLES HAS TO BE PROVIDED:
-#   - CMD - command given to singularity
 #   - CODE_DIR - directory where the singularity container/code is located
 #   - CONTAINER - name of singularity container
 #   - BASEDIR - must point to somewhere on **/scratch/

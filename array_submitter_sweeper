@@ -71,7 +71,7 @@ if [ ! -z ${SCRATCH} ]; then
 
     VARIABLES="CODE_DIR=${EXP_DIR},WORKDIR_MOUNT=${WORKDIR_MOUNT},\
 CONTAINER=${CONTAINER_NAME},RESULTS_MOUNT=${RESULTS_MOUNT},\
-STUFF_TO_TMP=${STUFF_TO_TMP}, BASEDIR=${BASEDIR}"
+STUFF_TO_TMP=${STUFF_TO_TMP},BASEDIR=${BASEDIR}"
 
     # SUBMIT JOBS
     sbatch_cmd="--job-name=${EXP_NAME} \
@@ -82,7 +82,7 @@ STUFF_TO_TMP=${STUFF_TO_TMP}, BASEDIR=${BASEDIR}"
                 --mem=${MEM} \
                 --chdir=${BASEDIR} \
                 -o ${BASEDIR}/${EXP_NAME}/hpc_output/${EXP_NAME}_%A_%a.out \
-                --export=ALL,CMD=\"${CMD_N}\",\"${VARIABLES}\",EXP_NAME=${EXP_NAME}"
+                --export=ALL,\"${VARIABLES}\",EXP_NAME=${EXP_NAME}"
 
     re='^[0-9]+$'
     if  [[ ! $GPUS =~ $re ]] ; then
