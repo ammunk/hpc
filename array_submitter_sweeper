@@ -39,9 +39,9 @@ CONTAINER_NAME="container.sif"
 STUFF_TO_TMP=""
 
 # wandb sweeper id and number of sweeps
-CMD_BASE="wandb agent --count 1 ${wandb-sweeper-id}"
 SWEEPERID=""
 N=1
+CMD_BASE="wandb agent --count 1 ${wandb-sweeper-id}"
 
 # clear array_command_list.txt before putting thins into it
 array_commands="array_command_list_${EXP_NAME}.txt"
