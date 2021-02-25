@@ -9,8 +9,7 @@
 #   - WORKDIR_MOUNT - directory in the singularity container where code will be run
 #   - RESULTS_MOUNT - directory in the singularity container where results will be saved
 #   - STUFF_TO_TMP - e.g. move the training data to the SLURM_TMPDIR for traning a network
-
-# see eg. https://docs.computecanada.ca/wiki/A_tutorial_on_%27tar%27
+#   - RESULTS_TO_SCRATCH - the results we seek to move back from the temporary directory to a **/scratch location
 
 if [[ "${BASEDIR}" == *"scratch"* ]]; then
     PLAI_TMPDIR="/scratch-ssd/amunk_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
@@ -18,16 +17,16 @@ if [[ "${BASEDIR}" == *"scratch"* ]]; then
     mkdir -p $PLAI_TMPDIR
 
     DB="db_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
-    WORKDIR_OVERLAY="overlay_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
+    OVERLAY="overlay_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
     TMP="tmp_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
-    HOME_OVERLAY="home_overlay_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
+    HOME_OVERLAY="home_overlay_${SLURM_JOB_ID}"
 
     cd "$BASEDIR"
 
     # move data to temporary SLURM DIR which is much faster for I/O
     echo "Copying singularity (${CODE_DIR}/${CONTAINER}) to ${PLAI_TMPDIR}"
+    # move singularity file
     time rsync -av "${CODE_DIR}/${CONTAINER}" "${PLAI_TMPDIR}"
-    time rsync -av "${CODE_DIR}/hpc_files/continue_jobs_commands.txt" "${PLAI_TMPDIR}"
 
     # replace any "/"-character or spaces with "_" to use as a name
     stuff_to_tar_suffix=$(tr ' |/' '_' <<< ${STUFF_TO_TMP})
@@ -45,7 +44,7 @@ if [[ "${BASEDIR}" == *"scratch"* ]]; then
 
     if [ ! -z "${STUFF_TO_TMP}" ]; then
         echo "Moving tarball to slurm tmpdir"
-        time tar --keep-newer-files -xf "${BASEDIR}/tar_ball_${stuff_to_tar_suffix}.tar"
+        time tar -xf "${BASEDIR}/tar_ball_${stuff_to_tar_suffix}.tar"
     fi
 
     # ensure resultsdir exists
@@ -55,6 +54,7 @@ if [[ "${BASEDIR}" == *"scratch"* ]]; then
 
     # make directory that singularity can mount to and use to setup a database
     # such as postgresql or a monogdb etc.
+
     if [ ! -d "$DB" ]; then
         mkdir "$DB"
     fi
@@ -77,36 +77,57 @@ if [[ "${BASEDIR}" == *"scratch"* ]]; then
         mkdir "$HOME_OVERLAY"
     fi
 
-    CMD=$(sed -n "${SLURM_ARRAY_TASK_ID}p" "continue_jobs_commands.txt")
     echo "COMMANDS GIVEN: ${CMD}"
     echo "STUFF TO TMP: ${STUFF_TO_TMP}"
-    echo "RESULTS TO TAR: ${RESULTS_TO_TAR}"
+    echo "RESULTS TO TAR: ${RESULTS_TO_SCRATCH}"
 
     # --nv option: bind to system libraries (access to GPUS etc.)
-    # --no-home and --containall mimics the docker container behavior
+    # --no-home and --contain mimics the docker container behavior
     # --cleanenv is crucial to get wandb to work, as local environment variables may cause it to break on some systems
     # without those /home and more will be mounted be default
     # using "run" executed the "runscript" specified by the "%runscript"
     # any argument give "CMD" is passed to the runscript
     SINGULARITYENV_SLURM_JOB_ID=$SLURM_JOB_ID \
         SINGULARITYENV_SLURM_PROCID=$SLURM_PROCID \
-        SINGULARITYENV_SLURM_ARRAY_JOB_ID=$SLURM_ARRAY_JOB_ID \
-        SINGULARITYENV_SLURM_ARRAY_TASK_ID=$SLURM_ARRAY_TASK_ID \
         SINGULARITYENV_WANDB_ENTITY="Muffiuz" \
         /opt/singularity/bin/singularity run \
         --nv \
         --cleanenv \
         -B results:"${RESULTS_MOUNT}" \
         -B datasets:/datasets \
-        -B "${HOME_OVERLAY}":"${HOME}" \
         -B ${DB}:/db \
         -B ${TMP}:/tmp \
         -B ${WORKDIR_OVERLAY}:${WORKDIR_MOUNT} \
+        -B "${HOME_OVERLAY}":"${HOME}" \
         --no-home \
         --contain \
         --writable-tmpfs \
         ${CONTAINER} \
         ${CMD}
+
+
+    ######################################################################
+
+    # Move results back (if RESULTS_TO_SCRATCH is set)
+
+    # MAKE SURE THE RESULTS SAVED HAVE UNIQUE NAMES EITHER USING JOB ID AND
+    # OR SOME OTHER WAY - !!!! OTHERWISE STUFF WILL BE OVERWRITEN !!!!
+
+    ######################################################################
+
+    if  [ ! -z "${RESULTS_TO_SCRATCH}" ]; then
+        # if variable is provided make into an array
+        IFS=' ' read -a RESULTS_TO_SCRATCH <<< "${RESULTS_TO_SCRATCH[@]}"
+        # replace any "/"-character or spaces with "_" to use as a name
+        results_to_tar_suffix="$(tr ' |/' '_' <<< ${RESULTS_TO_SCRATCH[@]})"
+
+        # make a tarball of the results
+        time tar -cf "tar_ball_${results_to_tar_suffix}_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}.tar" "${RESULTS_TO_SCRATCH[@]}"
+
+        # move unpack the tarball to the BASEDIR
+        cd "${BASEDIR}/${EXP_NAME}"
+        time tar --keep-newer-files -xf "${PLAI_TMPDIR}/tar_ball_${results_to_tar_suffix}_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}.tar"
+    fi
 
     ######################################################################
 
