@@ -1,0 +1,31 @@
+Usage: bash job_submitter.sh [OPTION]
+Submit a job based on the provided options
+
+-a, --account                 Account to use on cedar (def-fwood, rrg-kevinlb).
+                                Ignored on the PLAI cluster. Default: rrg-kevinlb
+-g, --gpus                    Number of gpus per node. Default: 1
+-c, --cpu                     Number of cpus per node: Default: 2
+-W, --which-distributed      Kind of distributed gpu application backend used
+                                (lightning, script). Default: lightning
+-t, --time                    Requested runtime. Format: dd-HH:MM:SS.
+                                Default: 00-01:00:00
+-m, --mem-per-gpu             Amount of memory per requested gpu. E.g. 10G or 10M.
+                                Default: 10G
+-G, --gpu-type               Type of gpu to use (p100, p100l, v100l). Ignored on
+                                the PLAI cluster. Default: v100l
+-e, --exp-name                Name of the experiment. Used to created convenient
+                                folders in ${SCRATCH}/${project_name} and to name
+                                the generated output files. Default: "" (empty)
+-w, --wandb-sweepid           The wandb sweep id. When specified the scripts will
+                                submit an array job. The script determine the
+                                number of array jobs by promting the user for the
+                                number of sweeps. Array jobs will only request a
+                                single (1) gpu on a single (1) node
+-n, --num_nodes               Number of nodes. Default: 1
+-d, --data                    Whitespace separated list of paths to directories or
+                                files to transfer to ${SLURM_TMPDIR}. These paths
+                                MUST be relative to ${SCRATCH}/${project_name}.
+-s, --singularity-container   Path to singularity container. If specified the
+                                job is submitted as a Singularity based job
+-C, --configs                 Path to file specifying the experiment
+                                configuration. Default: experiment_configurations.txt

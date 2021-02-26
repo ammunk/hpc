@@ -5,7 +5,6 @@
 # (assumes submitted from source_dir/hpc_scripts)
 source_dir="$(dirname "$(pwd)")"
 project_name="$(echo ${source_dir} | awk -F/ '{print $NF}')"
-seed=""
 gpu_type="v100l"
 time="00-01:00:00"
 cpus=2
@@ -15,6 +14,7 @@ which_distributed="lightning"
 mem_per_gpu="10G"
 account='rrg-kevinlb'
 re='^[0-9]+$'
+exp_configs_path="experiment_configations.txt"
 while [[ $# -gt 0 ]]; do
   arg="$1"
   case "$arg" in
@@ -25,6 +25,10 @@ while [[ $# -gt 0 ]]; do
         echo "Supported account options: def-fwood or rrg-kevinlb " >&2; exit 1
       fi
       shift 2
+      ;;
+    -h|--help)
+      echo .help_message.txt
+      exit
       ;;
     -g|--gpus)
       gpus="$2"
@@ -40,7 +44,7 @@ while [[ $# -gt 0 ]]; do
       fi
       shift 2
       ;;
-    -wd|--which-distributed)
+    -W|--which-distributed)
       which_distributed="$2"
       allowed=("script" "lightning")
       if [[ ! " ${allowed[@]} " =~ " ${which_distributed} " ]]; then
@@ -65,7 +69,7 @@ while [[ $# -gt 0 ]]; do
       fi
       shift 2
       ;;
-    -gt|--gpu-type)
+    -G|--gpu-type)
       gpu_type="$2"
       shift 2
       allowed=("p100" "p100l" "v100l")
@@ -88,18 +92,21 @@ while [[ $# -gt 0 ]]; do
       fi
       shift 2
       ;;
-    -s|--seed)
-      # manually set the seed. If left empty we create a random seed
-      seed="$2"
-      if  [[ ! $seed =~ $re ]]; then
-        echo "num_nodes must be integer" >&2; exit 1
-      fi
-      shift 2
-      ;;
     -d|--data)
       # https://tldp.org/LDP/abs/html/string-manipulation.html
       stuff_to_tmp="$(echo "$@" | awk -F'--' '{print $2}')"
       shift $(( "$(echo "$stuff_to_tmp" | awk '{print NF}')" ))
+      ;;
+    -s|--singularity-container)
+      singularity_container="$2"
+      if [[ ! "$singularity_container" == *".sif" ]]; then
+        echo "Invalid Singularity container path. File extension must be .sif " >&2; exit 1
+      fi
+      shift 2
+      ;;
+    -C|--configs)
+      exp_configs_path="$2"
+      shift 2
       ;;
     *)
       unknown="$(echo "$@" | awk -F'--' '{print $2}')"
@@ -215,7 +222,7 @@ if [ ! -z ${SCRATCH} ]; then
     do_continue "${sbatch_cmd[@]}"
     sbatch "${sbatch_cmd[@]}" \
       ${source_dir}/hpc_files/distributed_scripts/distributed_dispatcher.sh \
-      "${which_distributed}" "${seed}" "${tarball}"
+      "${which_distributed}" "${tarball}"
   elif [[ ${which_distributed} == "lightning" ]]; then
     echo "Submitting distributed job with LIGHTING backend"
     sbatch_cmd+=(--cpus-per-task="${cpus}" --tasks-per-node=1 \
@@ -223,7 +230,7 @@ if [ ! -z ${SCRATCH} ]; then
     do_continue "${sbatch_cmd[@]}"
     sbatch "${sbatch_cmd[@]}" \
       ${source_dir}/hpc_files/distributed_scripts/distributed_dispatcher.sh \
-      "${which_distributed}" "${seed}" "${tarball}"
+      "${which_distributed}" "${tarball}"
   elif [ ! -z ${wandb_id} ]; then
     echo "Submitting sweeping job with sweep id: ${wandb_id}"
     if [[ "$(hostname)" == *"borg"* ]]; then

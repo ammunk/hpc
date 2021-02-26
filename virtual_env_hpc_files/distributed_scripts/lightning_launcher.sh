@@ -2,8 +2,7 @@
 ## for torch distributed launch
 nnodes=$1               # total number of nodes used in this computation
 nproc_per_node=$2       # number of processes (models) per node
-seed=$3                 # seed to be set for all processes
-tarball=$4              # tarball containing data etc to be moved to local node
+tarball=$3              # tarball containing data etc to be moved to local node
 
 # create plai machine temporary directory
 if [[ "${SLURM_TMPDIR}" == *"scratch-ssd"* ]]; then

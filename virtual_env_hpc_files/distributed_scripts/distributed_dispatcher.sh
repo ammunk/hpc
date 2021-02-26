@@ -1,16 +1,11 @@
 #!/bin/bash
 
 which_distributed="$1"
-seed="$2"
 tarball="$3"
 gpus=$(echo ${SLURM_GPUS_PER_NODE} | cut -d ":" -f 2)
 
 cd ${source_dir}
 source virtual_env/bin/activate
-
-if [ -z ${seed} ]; then
-    seed=$(python -c "import random; print(random.randint(0,2**32-1))")
-fi
 
 # check is srun (and therefore scontrol etc) exists
 if ! srun -v COMMAND &> /dev/null
@@ -28,12 +23,11 @@ if [ ${which_distributed} == "script" ]; then
       echo "launching ${i} job on ${var[i]} with master address ${var[0]}"
       srun -w ${var[$i]} -N 1 -n 1 \
         bash ${scripts_dir}/script_launcher.sh \
-        ${num_nodes} ${i} ${gpus} ${var[0]} ${seed} ${tarball} &
+        ${num_nodes} ${i} ${gpus} ${var[0]} ${tarball} &
   done
   wait
 elif [ ${which_distributed} == "lightning" ]; then
-  srun bash ${scripts_dir}/lightning_launcher.sh ${num_nodes} ${gpus} \
-    ${seed} ${tarball}
+  srun bash ${scripts_dir}/lightning_launcher.sh ${num_nodes} ${gpus} ${tarball}
 else
     echo "Distributed specification not supported" >&2; exit 1
 fi
