@@ -1,11 +1,17 @@
-#!/usr/bin/env bash
-
+#!/bin/bash
+#
 tarball="$1"
-IFS=', ' read -r -a cmd <<< "$2"
+IFS=', ' read -r -a cmd <<< "${exp_configs_path}"
 if [[ "${scratch_dir}" == *"scratch"* ]]; then
+    # check if srun (and therefore scontrol etc) exists
+    if ! srun -v COMMAND &> /dev/null
+    then
+        PATH=/opt/slurm/bin:${PATH}
+    fi
 
     # create plai machine temporary directory
     if [[ "${SLURM_TMPDIR}" == *"scratch-ssd"* ]]; then
+        SLURM_TMPDIR="${SLURM_TMPDIR}_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
         mkdir -p ${SLURM_TMPDIR}
     fi
     source ${source_dir}/virtual_env/bin/activate

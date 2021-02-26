@@ -28,8 +28,7 @@ each pose slightly different constraints on how experiments run once a job has
 been submitted. These constraints are minimal so that you do not have to give up
 e.g. Singularity's flexibility yet ensures the script can make some assumptions
 about how to run your experiments. These details on this can be found in the
-[Singularity readme](singularity_hpc_files/README.md) or the [virtual environment
-readme](/virtual_env_hpc_files/README.md).
+[Singularity readme] or the [virtual environment readme].
   
 To use these scripts, simply copy them into your **[appropriately
 structured](#project-structure)** project. The scripts are written to be
@@ -84,11 +83,10 @@ experiment's configurations depend on which type:
   details.
 - Single jobs which supports multi-node distributed gpu applications
   - The experiments configurations are specified using the
-    [experiment_configuration.txt](experiment_configurations.txt) file. It's
+    [experiment_configuration.txt] file. It's
     format differs slightly depending on whether you use Singularity or a
-    virtual environment. For details, see the [Singularity
-    readme](singularity_hpc_files/README.md) or the [virtual environment
-    readme](/virtual_env_hpc_files/README.md).
+    virtual environment. For details, see the [Singularity readme] or the
+    [virtual environment readme].
 
 The options that control the job submissions are:
 
@@ -162,7 +160,7 @@ When you submit a `wandb` sweep array job, you only need to specify the sweep
 id. That is, first initiate the sweep (either locally or one of the cluster),
 
 ``` bash
-wandb sweep sweep.yml
+wandb sweep sweeper.yml
 ```
 
 This will create a pending sweep on `wandb`'s servers. Then in
@@ -176,18 +174,16 @@ bash job_submitter.sh \ # or singularity_submitter.sh
 The script will then prompt for the number of sweeps which will `wandb` will
 track as part of the sweep.
 
-The provided [sweep.yml](sweep.yml) file can serve as a template, but should be
-modified to your specific sweep. Think of the [sweep.yml](sweep.yml) file as the
+The provided [sweeper.yml] file can serve as a template, but should be
+modified to your specific sweep. Think of the [sweeper.yml] file as the
 sweep's equivalent of the more general
-[experiment_configuration.txt](experiment_configurations.txt) file.
+[experiment_configuration.txt] file.
 
 ### How to specify experiment configurations:
 
-- For sweep jobs edit `sweep.yml`.
-- Otherwise edit
-  [experiment_configurations.txt](experiment_configurations.txt). See the
-  [Singularity readme](singularity/README.md) or [virtual environment
-  readme](/virtual_env_hpc_files/README.md) for the format.
+- For sweep jobs edit `sweeper.yml`.
+- Otherwise edit [experiment_configurations.txt]. See the [Singularity readme]
+  or [virtual environment readme] for the format.
 
 ## Copying datasets and other files to `SLURM_TMPDIR`
 
@@ -413,7 +409,7 @@ simply crashed, the cleanup will not happen.
 ### Keeping PLAI local storage clean
 
 To keep the local storages clean on the PLAI cluster, consider running the
-[cleanup script](plai_cleanups/submit_plai_cleanup.sh). This script submits a
+[cleanup script](plai_cleanups/submit_plai_cleanup). This script submits a
 job to each machine on the plai cluster and removes all directories and files
 found in `/scratch-ssd` that matches the pattern `${USER}*`.
 
@@ -427,3 +423,8 @@ found in `/scratch-ssd` that matches the pattern `${USER}*`.
       is, it should take precedence over a job submitter specified wandb sweep
       id. Print a warning statement if these two differ.
 - [ ] Remove seed option. Make part of application configurations
+
+[sweeper.yml]: (sweeper.yml)
+[Singularity readme]: (singularity_hpc_files/README.md)
+[virtual_environment readme]: (/virtual_env_hpc_files/README.md)
+[experiment_configurations.txt]: (experiment_configurations.txt)

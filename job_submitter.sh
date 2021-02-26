@@ -9,8 +9,8 @@ gpu_type="v100l"
 time="00-01:00:00"
 cpus=2
 gpus=1
+job_type="standard"
 num_nodes=1
-which_distributed="lightning"
 mem_per_gpu="10G"
 account='rrg-kevinlb'
 re='^[0-9]+$'
@@ -21,7 +21,7 @@ while [[ $# -gt 0 ]]; do
     -a|--account)
       account="$2"
       allowed=("def-fwood" "rrg-kevinlb")
-      if [[ ! " ${allowed[@]} " =~ " ${which_distributed} " ]]; then
+      if [[ ! " ${allowed[@]} " =~ " ${account} " ]]; then
         echo "Supported account options: def-fwood or rrg-kevinlb " >&2; exit 1
       fi
       shift 2
@@ -81,9 +81,13 @@ while [[ $# -gt 0 ]]; do
       exp_name="$2"
       shift 2
       ;;
-    -w|--wandb-sweepid)
-      wandb_id="$2"
+    -j|--job_type)
+      job_type="$2"
       shift 2
+      allowed=("standard" "distribued" "sweep")
+      if [[ ! " ${allowed[@]} " =~ " ${job_type} " ]]; then
+        echo "Supported job types: standard distributed sweep " >&2; exit 1
+      fi
       ;;
     -n|--num-nodes)
       num_nodes="$2"
@@ -102,6 +106,13 @@ while [[ $# -gt 0 ]]; do
       if [[ ! "$singularity_container" == *".sif" ]]; then
         echo "Invalid Singularity container path. File extension must be .sif " >&2; exit 1
       fi
+      if [ -z ${work_dir} ]; then
+        work_dir="workdir"
+      fi
+      shift 2
+      ;;
+    -w|--work-dir)
+      work_dir=$2
       shift 2
       ;;
     -C|--configs)
@@ -117,8 +128,15 @@ done
 
 if [ ! -z ${SCRATCH} ]; then
   scratch_dir="${SCRATCH}/${project_name}"
+  if [ ! -z ${singularity_container} ]; then
+    singularity_job = true
+  else
+    singularity_job = false
+  fi
 
-  cd ${source_dir}
+  if [[ ${job_type} == "distributed" ]] && [[ -z ${which_distributed}]]; then
+    echo "Must specify the type of distributed job using [-W, --which_distributed]" >&2; exit 1
+  fi
 
   # set the path to a file which contains the wandb api key
   WANDB_CREDENTIALS_PATH=~/wandb_credentials.txt
@@ -132,7 +150,7 @@ if [ ! -z ${SCRATCH} ]; then
     mkdir -p "${scratch_dir}/hpc_outputs"
   fi
 
-
+  # create tarball
   if [ ! -z ${stuff_to_tmp}  ]; then
       stuff_to_tar_suffix=$(tr ' |/' '_' <<< ${stuff_to_tmp})
       tarball="${scratch_dir}/tar_ball_${stuff_to_tar_suffix}.tar"
@@ -142,34 +160,43 @@ if [ ! -z ${SCRATCH} ]; then
           "${scratch_dir}/${stuff_to_tmp}"
   fi
 
-  # # load the necessary modules, depend on your hpc env
-  if [[ "$(hostname)" == *"cedar"* ]]; then
-    module load python/3.8.2
-  fi
+  if [[ ! ${singularity_container} == true ]]; then
+    cd ${source_dir}
 
-  if [ ! -d virtual_env ]; then
-    # setup virtual environment
-    mkdir virtual_env
-    python3 -m venv virtual_env
-    source virtual_env/bin/activate
+    # load the necessary modules, depend on your hpc env
+    if [[ "$(hostname)" == *"cedar"* ]]; then
+      module load python/3.8.2
+    fi
 
-    pip install --upgrade pip
-    pip install pipenv
-    # we skip locking as it takes quite some time and is redundant
-    # note that we use the Pipfile and not the Pipfile.lock here -
-    # this is because compute canada's wheels may not include the specific
-    # versions specified in the Pipfile.lock file. The Pipfile is a bit less
-    # picky and so allows the packages to be installed. Although this could mean
-    # slightly inconsistencies in the various versions of the packages.
-    time pipenv install --skip-lock
+    if [ ! -d virtual_env ]; then
+      # setup virtual environment
+      mkdir virtual_env
+      python3 -m venv virtual_env
+      source virtual_env/bin/activate
 
-    pip install torch==1.7.1+cu110 torchvision==0.8.2+cu110 \
-        torchaudio===0.7.2 -f https://download.pytorch.org/whl/torch_stable.html
+      pip install --upgrade pip
+      pip install pipenv
+      # we skip locking as it takes quite some time and is redundant
+      # note that we use the Pipfile and not the Pipfile.lock here -
+      # this is because compute canada's wheels may not include the specific
+      # versions specified in the Pipfile.lock file. The Pipfile is a bit less
+      # picky and so allows the packages to be installed. Although this could mean
+      # slightly inconsistencies in the various versions of the packages.
+      time pipenv install --skip-lock
+
+      pip install torch==1.7.1+cu110 torchvision==0.8.2+cu110 \
+          torchaudio===0.7.2 -f https://download.pytorch.org/whl/torch_stable.html
+    else
+      echo "Virtual environment already exists"
+    fi
+    hpc_file_location="${source_dir}/hpc_files/virtual_env_hpc_files"
+    args=("${tarball}")
   else
-    echo "Virtual environment already exists"
+    hpc_file_location="${source_dir}/hpc_files/singularity_hpc_files"
+    args=("${tarball}" "${workdir}")
   fi
 
-  if [ ! -z ${wandb_id} ]; then
+  if [[ ${job_type} == "sweep" ]]; then
     echo "About to submit a wandb sweep. Setting gpus=1 and num_nodes=1"
     gpus=1
     num_nodes=1
@@ -179,19 +206,41 @@ if [ ! -z ${SCRATCH} ]; then
       echo "number of sweeps must be integer" >&2; exit 1
     fi
     n_sweeps=${REPLY}
+    hpc_file_location="${hpc_file_location}/standard_job.sh"
+    if [[ "$(hostname)" == *"borg"* ]]; then
+      sbatch_cmd=(--array 1-${n_sweeps}%10)
+    elif [[ "$(hostname)" == *"cedar"* ]]; then
+      sbatch_cmd=(--array 1-${n_sweeps})
+    fi
+    sbatch_cmd+=(--tasks-per-node=1 \
+      --job-name="sweep-${project_name}-${exp_name}" \
+      -o "${SCRATCH}/${project_name}/hpc_outputs/sweep_${exp_name}_%A_%a.out")
+  elif [[ ${job_type} == "standard" ]]; then
+    echo "About to submit a standard job. Setting num_nodes=1"
+    num_nodes=1
+    hpc_file_location="${hpc_file_location}/standard_job.sh"
+    sbatch_cmd=(--tasks-per-node=1 \
+      --job-name="sweep-${project_name}-${exp_name}" \
+      -o "${SCRATCH}/${project_name}/hpc_outputs/${exp_name}_%j.out")
+  elif [[ ${job_type} == "distributed" ]]; then
+    echo "About to submit a ditributed job of type \"${which_distributed}\""
+    sbatch_cmd=(-o "${SCRATCH}/${project_name}/hpc_outputs/${which_distributed}_${exp_name}_%j.out" \
+      --job-name="${which_distributed}_dist-${project_name}-${exp_name}")
+    hpc_file_location="${hpc_file_location}/distributed_dispatcher.sh"
+    if [[ ${which_distributed} == "lightning" ]]; then
+      sbatch_cmd+=(--tasks-per-node=${gpus}
+    elif [[ ${which_distributed} == "script" ]]
+      cpu=$((${cpus}*${gpus}))
+      sbatch_cmd+=(--tasks-per-node=1)
+    fi
   fi
 
-  sbatch_cmd=(--nodes="${num_nodes}" \
+  sbatch_cmd+=(--nodes="${num_nodes}" \
     --time="${time}" \
-    --mem-per-gpu="${mem_per_gpu}")
+    --mem-per-gpu="${mem_per_gpu}"\
+    --cpus-per-task="${cpus}")
 
-  if [ ! -z ${which_distributed} ]; then
-    sbatch_cmd+=(-o "${SCRATCH}/${project_name}/hpc_outputs/${which_distributed}_${exp_name}_%j.out")
-  else
-    sbatch_cmd+=(-o "${SCRATCH}/${project_name}/hpc_outputs/sweep_${exp_name}_%A_%a.out")
-  fi
-
-  variables="scratch_dir=${scratch_dir},source_dir=${source_dir},exp_name=${exp_name},WANDB_API_KEY=${WANDB_API_KEY}"
+  variables="scratch_dir=${scratch_dir},source_dir=${source_dir},exp_name=${exp_name},WANDB_API_KEY=${WANDB_API_KEY},exp_config_path=${exp_configs_path},which_distributed=${which_distributed}"
   if [[ "$(hostname)" == *"borg"* ]]; then
       sbatch_cmd+=(--partition="plai" --gpus-per-node="${gpus}")
       slurm_tmpdir="/scratch-ssd/${USER}"
@@ -214,40 +263,8 @@ if [ ! -z ${SCRATCH} ]; then
     done
   }
 
-  if [[ ${which_distributed} == "script" ]]; then
-    echo "Submitting distributed job with SCRIPT backend"
-    cpus=$((${cpus}*${gpus}))
-    sbatch_cmd+=(--cpus-per-task="${cpus-per-node}" --tasks-per-node=${gpus} \
-       --job-name="script_dist-${project_name}-${exp_name}")
-    do_continue "${sbatch_cmd[@]}"
-    sbatch "${sbatch_cmd[@]}" \
-      ${source_dir}/hpc_files/distributed_scripts/distributed_dispatcher.sh \
-      "${which_distributed}" "${tarball}"
-  elif [[ ${which_distributed} == "lightning" ]]; then
-    echo "Submitting distributed job with LIGHTING backend"
-    sbatch_cmd+=(--cpus-per-task="${cpus}" --tasks-per-node=1 \
-       --job-name="lightning_dist-${project_name}-${exp_name}")
-    do_continue "${sbatch_cmd[@]}"
-    sbatch "${sbatch_cmd[@]}" \
-      ${source_dir}/hpc_files/distributed_scripts/distributed_dispatcher.sh \
-      "${which_distributed}" "${tarball}"
-  elif [ ! -z ${wandb_id} ]; then
-    echo "Submitting sweeping job with sweep id: ${wandb_id}"
-    if [[ "$(hostname)" == *"borg"* ]]; then
-      sbatch_cmd+=(--array 1-${n_sweeps}%10)
-    elif [[ "$(hostname)" == *"cedar"* ]]; then
-      sbatch_cmd+=(--array 1-${n_sweeps})
-    fi
-    sbatch_cmd+=(--cpus-per-task="${cpus}" --tasks-per-node=1 \
-       --job-name="sweep-${project_name}-${exp_name}")
-    do_continue "${sbatch_cmd[@]}"
-    cmd="wandb agent --count 1 muffiuz/tri-density-matching/${wandb_id}"
-    sbatch "${sbatch_cmd[@]}" \
-      ${source_dir}/hpc_files/cc_virtual_env_sweeper_job.sh "${tarball}" \
-      "${cmd}"
-  else
-    echo "Distributed specification not supported" >&2; exit 1
-  fi
+  do_continue "${sbatch_cmd[@]}"
+  sbatch "${sbatch_cmd[@]}" "${hpc_file_location}" "${args[@]}"
 else
     echo "SCRATCH variable not assigned" >&2; exit 1
 fi
