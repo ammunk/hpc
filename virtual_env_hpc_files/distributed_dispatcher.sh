@@ -19,7 +19,7 @@ fi
 var=(`scontrol show hostname $SLURM_NODELIST`)
 
 num_nodes=${#var[@]}
-scripts_dir="${source_dir}/hpc_files/distributed_scripts"
+scripts_dir="${source_dir}/hpc_files/virtual_env_hpc_files/distributed_scripts"
 if [[ ${which_distributed} == "script" ]]; then
   for i in `seq 0 $(echo $num_nodes -1 | bc)`;
   do

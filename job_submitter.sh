@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 # get parent of parent directory from where this script is called
 # (assumes submitted from source_dir/hpc_scripts)
 source_dir="$(dirname "$(pwd)")"
@@ -14,7 +13,8 @@ num_nodes=1
 mem_per_gpu="10G"
 account='rrg-kevinlb'
 re='^[0-9]+$'
-exp_configs_path="experiment_configations.txt"
+singularity_job=false
+exp_configs_path="${source_dir}/hpc_files/experiment_configurations.txt"
 while [[ $# -gt 0 ]]; do
   arg="$1"
   case "$arg" in
@@ -81,12 +81,12 @@ while [[ $# -gt 0 ]]; do
       exp_name="$2"
       shift 2
       ;;
-    -j|--job_type)
+    -j|--job-type)
       job_type="$2"
       shift 2
-      allowed=("standard" "distribued" "sweep")
+      allowed=("standard" "distributed" "sweep")
       if [[ ! " ${allowed[@]} " =~ " ${job_type} " ]]; then
-        echo "Supported job types: standard distributed sweep " >&2; exit 1
+        echo "Error: supported job types: standard distributed sweep " >&2; exit 1
       fi
       ;;
     -n|--num-nodes)
@@ -121,7 +121,7 @@ while [[ $# -gt 0 ]]; do
       ;;
     *)
       unknown="$(echo "$@" | awk -F'--' '{print $2}')"
-      shift "$(( "$(echo "$unknown" | awk '{print NF}')" ))"
+      shift "$(echo "$unknown" | awk '{print NF}')"
       ;;
   esac
 done
@@ -129,12 +129,10 @@ done
 if [ ! -z ${SCRATCH} ]; then
   scratch_dir="${SCRATCH}/${project_name}"
   if [ ! -z ${singularity_container} ]; then
-    singularity_job = true
-  else
-    singularity_job = false
+    singularity_job=true
   fi
 
-  if [[ ${job_type} == "distributed" ]] && [[ -z ${which_distributed}]]; then
+  if [ ${job_type} == "distributed" ] && [ -z ${which_distributed} ]; then
     echo "Must specify the type of distributed job using [-W, --which_distributed]" >&2; exit 1
   fi
 
@@ -175,17 +173,23 @@ if [ ! -z ${SCRATCH} ]; then
       source virtual_env/bin/activate
 
       pip install --upgrade pip
-      pip install pipenv
-      # we skip locking as it takes quite some time and is redundant
-      # note that we use the Pipfile and not the Pipfile.lock here -
-      # this is because compute canada's wheels may not include the specific
-      # versions specified in the Pipfile.lock file. The Pipfile is a bit less
-      # picky and so allows the packages to be installed. Although this could mean
-      # slightly inconsistencies in the various versions of the packages.
-      time pipenv install --skip-lock
-
       pip install torch==1.7.1+cu110 torchvision==0.8.2+cu110 \
           torchaudio===0.7.2 -f https://download.pytorch.org/whl/torch_stable.html
+      if [ -f Pipfile ]; then
+        pip install pipenv
+        # we skip locking as it takes quite some time and is redundant
+        # note that we use the Pipfile and not the Pipfile.lock here -
+        # this is because compute canada's wheels may not include the specific
+        # versions specified in the Pipfile.lock file. The Pipfile is a bit less
+        # picky and so allows the packages to be installed. Although this could mean
+        # slightly inconsistencies in the various versions of the packages.
+        time pipenv install --skip-lock
+      elif [ -f requirements.txt ]; then
+        pip install -r requirements.txt
+      else
+        echo "No file specifying python packge dependencies."
+      fi
+
     else
       echo "Virtual environment already exists"
     fi
@@ -220,16 +224,16 @@ if [ ! -z ${SCRATCH} ]; then
     num_nodes=1
     hpc_file_location="${hpc_file_location}/standard_job.sh"
     sbatch_cmd=(--tasks-per-node=1 \
-      --job-name="sweep-${project_name}-${exp_name}" \
-      -o "${SCRATCH}/${project_name}/hpc_outputs/${exp_name}_%j.out")
+      --job-name="standard-${project_name}-${exp_name}" \
+      -o "${SCRATCH}/${project_name}/hpc_outputs/standard_${exp_name}_%j.out")
   elif [[ ${job_type} == "distributed" ]]; then
     echo "About to submit a ditributed job of type \"${which_distributed}\""
     sbatch_cmd=(-o "${SCRATCH}/${project_name}/hpc_outputs/${which_distributed}_${exp_name}_%j.out" \
       --job-name="${which_distributed}_dist-${project_name}-${exp_name}")
     hpc_file_location="${hpc_file_location}/distributed_dispatcher.sh"
     if [[ ${which_distributed} == "lightning" ]]; then
-      sbatch_cmd+=(--tasks-per-node=${gpus}
-    elif [[ ${which_distributed} == "script" ]]
+      sbatch_cmd+=(--tasks-per-node=${gpus})
+    elif [[ ${which_distributed} == "script" ]]; then
       cpu=$((${cpus}*${gpus}))
       sbatch_cmd+=(--tasks-per-node=1)
     fi
@@ -253,7 +257,7 @@ singularity_container=${singularity_container}"
   elif [[ "$(hostname)" == *"cedar"* ]]; then
       sbatch_cmd+=(--gpus-per-node="${gpu_type}:${gpus}" --account="${account}")
   fi
-  sbatch_cmd+=(--export=ALL,${variables})
+  sbatch_cmd+=(--export=ALL,"${variables}")
 
   function do_continue {
     echo "The following sbatch options will be set:"
