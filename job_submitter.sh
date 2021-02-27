@@ -240,7 +240,12 @@ if [ ! -z ${SCRATCH} ]; then
     --mem-per-gpu="${mem_per_gpu}"\
     --cpus-per-task="${cpus}")
 
-  variables="scratch_dir=${scratch_dir},source_dir=${source_dir},exp_name=${exp_name},WANDB_API_KEY=${WANDB_API_KEY},exp_config_path=${exp_configs_path},which_distributed=${which_distributed}"
+  cmd=$(tr -d '\n\r\\' < "${exp_configs_path}")
+  variables="scratch_dir=${scratch_dir},source_dir=${source_dir},\
+exp_name=${exp_name},WANDB_API_KEY=${WANDB_API_KEY},cmd=${cmd},\
+which_distributed=${which_distributed},\
+singularity_container=${singularity_container}"
+
   if [[ "$(hostname)" == *"borg"* ]]; then
       sbatch_cmd+=(--partition="plai" --gpus-per-node="${gpus}")
       slurm_tmpdir="/scratch-ssd/${USER}"

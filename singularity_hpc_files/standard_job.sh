@@ -83,8 +83,8 @@ if [[ "${scratch_dir}" == *"scratch"* ]]; then
         --no-home \
         --contain\
         --writable-tmpfs \
-        "$CONTAINER" \
-        "$CMD"
+        "${singularity_container}" \
+        "$cmd"
 
     if [[ "${SLURM_TMPDIR}" == *"scratch-ssd"* ]]; then
         srun rm -r ${SLURM_TMPDIR}

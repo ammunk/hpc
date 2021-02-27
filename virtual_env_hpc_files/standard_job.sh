@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 tarball="$1"
-IFS=', ' read -r -a cmd <<< "${exp_configs_path}"
+IFS=', ' read -r -a cmd <<< "${cmd}"
 if [[ "${scratch_dir}" == *"scratch"* ]]; then
     # check if srun (and therefore scontrol etc) exists
     if ! srun -v COMMAND &> /dev/null

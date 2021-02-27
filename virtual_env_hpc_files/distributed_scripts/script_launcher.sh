@@ -7,6 +7,7 @@ master_addr=$4          # hostname for the master node
 tarball=$5              # tarball containing data etc to be moved to local node
 port=8888               # port to use
 
+IFS=', ' read -r -a cmd <<< "${cmd}"
 # create plai machine temporary directory
 if [[ "${SLURM_TMPDIR}" == *"scratch-ssd"* ]]; then
     mkdir -p ${SLURM_TMPDIR}
@@ -26,18 +27,4 @@ python -m torch.distributed.launch \
     --node_rank ${node_rank} \
     --master_addr ${master_addr} \
     --master_port ${port} \
-    -m tridensity.main \
-    --data_dir ${SLURM_TMPDIR}/datasets \
-    --num_workers 6 \
-    --experiment "toy" \
-    --max_iterations 1000 \
-    --max_epochs 1000 \
-    --adv_lr 1e-5 \
-    --gen_lr 1e-4 \
-    --checkpoint_dir ${scratch_dir}/${EXP_NAME}/checkpoints \
-    --checkpoint_every 1000 \
-    --visualize_every 200 \
-    --log_every 100 \
-    --batch_size ${batch_size} \
-    distributed_script \
-    --local_world_size ${nproc_per_node}
+    "${cmd[@]}"
