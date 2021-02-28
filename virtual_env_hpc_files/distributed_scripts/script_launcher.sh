@@ -2,7 +2,7 @@
 ## for torch distributed launch
 nnodes=$1               # total number of nodes used in this computation
 node_rank=$2            # current node rank, 0-indexed
-nproc_per_node=$3       # number of processes (models) per node
+nproc_per_node=$3       # number of processes (models) per node (typically equal number of gpus per node)
 master_addr=$4          # hostname for the master node
 tarball=$5              # tarball containing data etc to be moved to local node
 port=8888               # port to use

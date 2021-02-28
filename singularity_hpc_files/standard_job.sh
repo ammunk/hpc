@@ -60,12 +60,16 @@ if [[ "${scratch_dir}" == *"scratch"* ]]; then
         mkdir "$HOME_OVERLAY"
     fi
 
+    if [ -z "${workdir}" ]; then
+        # if wirkdir is empty make a dummy workdir that is unlikely to clash with anything inside the container
+        workdir="/workdir_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
+    fi
+
     # --nv option: bind to system libraries (access to GPUS etc.)
     # --no-home and --containall mimics the docker container behavior
     # --cleanenv is crucial to get wandb to work, as local environment variables may cause it to break on some systems
-    # without those /home and more will be mounted be default
-    # using "run" executed the "runscript" specified by the "%runscript"
-    # any argument give "CMD" is passed to the runscript
+    # without those /home and more will be mounted be default.
+    # Using "run" will execute the "runscript" specified by the "%runscript"
     SINGULARITYENV_SLURM_JOB_ID=$SLURM_JOB_ID \
         SINGULARITYENV_SLURM_PROCID=$SLURM_PROCID \
         SINGULARITYENV_SLURM_ARRAY_JOB_ID=$SLURM_ARRAY_JOB_ID \

@@ -1,7 +1,7 @@
 #!/bin/bash
 ## for torch distributed launch
 nnodes=$1               # total number of nodes used in this computation
-nproc_per_node=$2       # number of processes (models) per node
+nproc_per_node=$2       # number of processes (models) per node (typically equal number of gpus per node)
 tarball=$3              # tarball containing data etc to be moved to local node
 
 IFS=', ' read -r -a cmd <<< "${cmd}"
@@ -19,4 +19,6 @@ fi
 batch_size=32 # batch size for each processes
 precision=16 # set floating point precision
 
-python "${cmd[@]}"
+"${cmd[@]}"
+
+#EDIT COMMAND TO TAKE nndoes and nproc_per_node as argument

@@ -111,7 +111,7 @@ while [[ $# -gt 0 ]]; do
       fi
       shift 2
       ;;
-    -w|--work-dir)
+    -w|--workdir)
       work_dir=$2
       shift 2
       ;;
