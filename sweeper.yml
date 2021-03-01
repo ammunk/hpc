@@ -21,7 +21,7 @@ command:
     - --log_every
     - 100
     - --checkpoint_dir
-    - "${BASEDIR}/checkpoints"
+    - ${BASEDIR}/checkpoints
     - --visualize_every
     - 500
     - --num_workers
@@ -31,4 +31,4 @@ command:
     - --max_epoch
     - 1e3
     - --data_dir
-    - "${SLURM_TMPDIR}/datasets"
+    - ${SLURM_TMPDIR}/datasets
