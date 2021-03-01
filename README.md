@@ -175,8 +175,7 @@ This will create a pending sweep on `wandb`'s servers. Then in
 `project_root/hpc_files` do
 
 ``` bash
-bash job_submitter.sh \ # or singularity_submitter.sh 
-  --wandb-sweepid [some id]
+bash job_submitter.sh --wandb-sweepid [some id]
 ```
 
 The script will then prompt for the number of sweeps which will `wandb` will
