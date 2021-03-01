@@ -206,6 +206,8 @@ if [ ! -z ${SCRATCH} ]; then
     gpus=1
     num_nodes=1
     which_distributed="" # ensure no distributed training
+    read -p 'Specify sweeper id: '
+    sweepid="${REPLY}"
     read -p 'Specify number of sweeps: '
     if  [[ ! ${REPLY} =~ $re ]]; then
       echo "number of sweeps must be integer" >&2; exit 1
@@ -246,6 +248,10 @@ if [ ! -z ${SCRATCH} ]; then
     --cpus-per-task="${cpus}")
 
   cmd=$(tr -d '\n\r\\' < "${exp_configs_path}")
+  if [ ! -z "${sweepid}" ]; then
+    cmd="$(sed -r 's/\/[0-9a-zA-Z]+$/\/'${sweepid}'/' <<< ${cmd})"
+    echo "About to submit a sweep with the following command: ${cmd}"
+  fi
   variables="scratch_dir=${scratch_dir},source_dir=${source_dir},\
 exp_name=${exp_name},WANDB_API_KEY=${WANDB_API_KEY},cmd=${cmd},\
 which_distributed=${which_distributed},\
