@@ -16,9 +16,8 @@ if [[ ! ${program} == "python"* ]]; then
     echo "Command must be a python execution" >&2 ; exit 1
 fi
 cmds="$(cut -d ' ' -f2- <<< "${cmd}")"
-
 cmd="${cmd_base} ${cmds}"
-
+echo "COMMANDS GIVEN: ${cmd[@]}"
 IFS=', ' read -r -a cmd <<< "${cmd}"
 # create plai machine temporary directory
 if [[ "${SLURM_TMPDIR}" == *"scratch-ssd"* ]]; then

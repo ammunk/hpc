@@ -9,9 +9,10 @@ program="$(cut -d ' ' -f1 <<< "${cmd}")"
 if [[ ! ${program} == "python"* ]]; then
     echo "Command must be a python execution" >&2 ; exit 1
 fi
-cmds="$(cut -d ' ' -f2- <<< "${cmd}" | sed -e 's/ .*num_nodes.* / /g' -e 's/ .*gpus.* / /g')"
-cmds="$(sed -r  sed -e 's/ .*num_nodes.*//g' -e 's/ .*gpus.*//g' <<< "${cmds}")"
+cmds="$(cut -d ' ' -f2- <<< "${cmd}" | sed -r -e 's/ .*num_nodes.* [0-9]+ / /g' -r -e 's/ .*gpus.* [0-9]+ / /g')"
+cmds="$(sed -r -e 's/ .*num_nodes.* [0-9]+//g' -r -e 's/ .*gpus.* [0-9]+//g' <<< "${cmds}")"
 cmd="python ${cmds} --num_nodes=${nnodes} --gpus=${nproc_per_node}"
+echo "COMMANDS GIVEN: ${cmd[@]}"
 IFS=', ' read -r -a cmd <<< "${cmd}"
 # create plai machine temporary directory
 if [[ "${SLURM_TMPDIR}" == *"scratch-ssd"* ]]; then

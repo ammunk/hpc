@@ -15,6 +15,7 @@ account='rrg-kevinlb'
 re='^[0-9]+$'
 singularity_job=false
 exp_configs_path="${source_dir}/hpc_files/experiment_configurations.txt"
+hpc_files_dir="$(pwd)"
 while [[ $# -gt 0 ]]; do
   arg="$1"
   case "$arg" in
@@ -189,7 +190,6 @@ if [ ! -z ${SCRATCH} ]; then
       else
         echo "No file specifying python packge dependencies."
       fi
-
     else
       echo "Virtual environment already exists"
     fi
@@ -199,6 +199,7 @@ if [ ! -z ${SCRATCH} ]; then
     hpc_file_location="${source_dir}/hpc_files/singularity_hpc_files"
     args=("${tarball}" "${workdir}")
   fi
+  cd ${hpc_files_dir}
 
   if [[ ${job_type} == "sweep" ]]; then
     echo "About to submit a wandb sweep. Setting gpus=1 and num_nodes=1"
