@@ -7,6 +7,18 @@ master_addr=$4          # hostname for the master node
 tarball=$5              # tarball containing data etc to be moved to local node
 port=8888               # port to use
 
+cmd_base="python -m torch.distributed.launch --nproc_per_node ${nproc_per_node}"
+cmd_base="${cmd_base} --nnodes ${nnodes} --node_rank ${node_rank} --master_addr"
+cmd_base="${cmd_base} ${master_addr} --master_port ${port}"
+
+program="$(cut -d ' ' -f1 <<< "${cmd}")"
+if [[ ! ${program} == "python"* ]]; then
+    echo "Command must be a python execution" >&2 ; exit 1
+fi
+cmds="$(cut -d ' ' -f2- <<< "${cmd}")"
+
+cmd="${cmd_base} ${cmds}"
+
 IFS=', ' read -r -a cmd <<< "${cmd}"
 # create plai machine temporary directory
 if [[ "${SLURM_TMPDIR}" == *"scratch-ssd"* ]]; then
@@ -19,12 +31,4 @@ if [ ! -z ${tarball}  ]; then
         -C ${SLURM_TMPDIR} --strip-components=$(wc -w <<< $(tr "/" " " <<< ${scratch_dir}))
 fi
 
-batch_size=32 # batch size for each processes
-
-python -m torch.distributed.launch \
-    --nproc_per_node ${nproc_per_node} \
-    --nnodes ${nnodes} \
-    --node_rank ${node_rank} \
-    --master_addr ${master_addr} \
-    --master_port ${port} \
-    "${cmd[@]}"
+"${cmd[@]}"

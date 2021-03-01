@@ -60,12 +60,12 @@ absorb additional argument appropriate for each approach.
 A multi-node distributed gpu experiment managed by lightning **requires**
 knowing the number of gpus per node and total number of nodes. Therefore the
 script here will modify your provided command and add the following
-`argparse`-formatted arguments
+`argparse`-formatted arguments **at the end**
 
 - `--num_nodes number_of_nodes`
 - `--gpus number_of_gpus_per_node`
 
-That is if your command looks like this
+That is, if your command looks like this
 
 ```bash
 python [your commands]
@@ -73,7 +73,7 @@ python [your commands]
 it will be changed to
 
 ```bash
-python --num_nodes number_of_nodes --gpus number_of_gpus_per_node [your commands]
+python [your commands] --num_nodes number_of_nodes --gpus number_of_gpus_per_node 
 ```
 
 You must there ensure that your experiment can absorb these additional arguments
@@ -83,9 +83,9 @@ and use them appropriately as described in Lightning's
 #### `torch.distributed.launch` distributed job
 
 The only requirement imposed using `torch.distributed.launch` is that your
-experiment take the argument `--local-rank`. This requirement is, in fact,
-imposed by the `torch.distributed.launch`. For example if your command looks
-like this
+experiment take the argument `--local-rank` as the first given argument. This
+requirement is, in fact, imposed by the `torch.distributed.launch`. For example
+if your command looks like this
 
 ```bash
 python [your commands]
