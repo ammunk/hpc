@@ -95,8 +95,12 @@ The options that control the job submissions are:
                                 Ignored on the PLAI cluster. Default: rrg-kevinlb
 -g, --gpus                    Number of gpus per node. Default: 1
 -c, --cpu                     Number of cpus per node: Default: 2
--W, --which-distributed      Kind of distributed gpu application backend used
-                                (lightning, script). Default: lightning
+-j, --job-type                Type of job to run, one of 
+                                (standard, sweep, distributed). 
+                                Default: standard 
+-W, --which-distributed       Kind of distributed gpu application backend used
+                                (lightning, script). Must be provided if using 
+                                "--job-type distributed"
 -t, --time                    Requested runtime. Format: dd-HH:MM:SS. 
                                 Default: 00-01:00:00
 -m, --mem-per-gpu             Amount of memory per requested gpu. E.g. 10G or 10M.
@@ -114,11 +118,15 @@ The options that control the job submissions are:
 -n, --num_nodes               Number of nodes. Default: 1
 -d, --data                    Whitespace separated list of paths to directories or 
                                 files to transfer to ${SLURM_TMPDIR}. These paths 
-                                MUST be relative to ${SCRATCH}/${project_name}.
+                                MUST be relative to ${SCRATCH}/${project_name}
 -s, --singularity-container   Path to singularity container. If specified the 
                                 job is submitted as a Singularity based job
+-w, --workdir                 Path to a mounted working directory in the 
+                                Singularity container
 -C, --configs                 Path to file specifying the experiment 
                                 configuration. Default: experiment_configurations.txt
+
+-h, --help                    Show this message
 ```
 #### Example
 
