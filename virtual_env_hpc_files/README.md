@@ -4,7 +4,7 @@
 
 The scripts will automatically create the virtual environment in `${source_dir}`
 based on either a `${source_dir}/requirements.txt` or `${source_dir}/Pipfile`
-file. If both are present the `Pipfile` will take precedence. The `Pipfile` are
+file. If both are present the `Pipfile` will take precedence. The `Pipfile` is
 the equivalent of a `requirements.txt` file but used by
 [pipenv](https://pipenv.pypa.io/en/latest/) for creating and managing a
 virtual environment.
