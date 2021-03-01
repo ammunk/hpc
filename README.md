@@ -384,12 +384,29 @@ scripts assumes a certain structure
 ``` text
 your_project_name
 ├── hpc_files
+│   ├── experiment_configurations.txt
 │   ├── job_submitter.sh
-│   └── experiment_configuration.txt
+│   ├── plai_cleanups
+│   │   ├── plai_cleanup.sh
+│   │   └── submit_plai_cleanup
+│   ├── README.md
+│   ├── singularity_hpc_files
+│   │   ├── distributed_dispatcher.sh
+│   │   ├── README.md
+│   │   └── standard_job.sh
+│   ├── sweeper.yml
+│   └── virtual_env_hpc_files
+│       ├── distributed_dispatcher.sh
+│       ├── distributed_scripts
+│       │   ├── lightning_launcher.sh
+│       │   └── script_launcher.sh
+│       ├── README.md
+│       └── standard_job.sh
 ├── Pipfile
 ├── requirements.txt
 ├── singularity_container.sif
-│  
+├── Singularity.bld
+│ 
 .
 . project source files
 .
