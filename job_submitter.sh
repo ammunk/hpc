@@ -99,8 +99,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     -d|--data)
       # https://tldp.org/LDP/abs/html/string-manipulation.html
-      stuff_to_tmp="$(echo "$@" | awk -F'--' '{print $2}')"
-      shift $(( "$(echo "$stuff_to_tmp" | awk '{print NF}')" ))
+      stuff_to_tmp="$(echo "$@" | awk -F'--' '{print $2}')" # includes the argument flag itself
+      shift "$(echo "$stuff_to_tmp" | awk '{print NF}')"
+      # remove argument flag
+      stuff_to_tmp="$(cut -d ' ' -f2- <<< ${stuff_to_tmp})" # includes the argument flag itself
       ;;
     -s|--singularity-container)
       singularity_container="$2"
