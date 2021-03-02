@@ -129,13 +129,13 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [ ! -z ${SCRATCH} ]; then
+if [ ! -z "${SCRATCH}" ]; then
   scratch_dir="${SCRATCH}/${project_name}"
   if [ ! -z ${singularity_container} ]; then
     singularity_job=true
   fi
 
-  if [ ${job_type} == "distributed" ] && [ -z ${which_distributed} ]; then
+  if [ "${job_type}" == "distributed" ] && [ -z ${which_distributed} ]; then
     echo "Must specify the type of distributed job using [-W, --which_distributed]" >&2; exit 1
   fi
 
@@ -152,7 +152,7 @@ if [ ! -z ${SCRATCH} ]; then
   fi
 
   # create tarball
-  if [ ! -z ${stuff_to_tmp}  ]; then
+  if [ ! -z "${stuff_to_tmp}" ] && [ ! -f "${stuff_to_tmp}" ]; then
       stuff_to_tar_suffix=$(tr ' |/' '_' <<< ${stuff_to_tmp})
       tarball="${scratch_dir}/tar_ball_${stuff_to_tar_suffix}.tar"
 
@@ -161,7 +161,7 @@ if [ ! -z ${SCRATCH} ]; then
           "${scratch_dir}/${stuff_to_tmp}"
   fi
 
-  if [[ ! ${singularity_container} == true ]]; then
+  if [[ ! "${singularity_container}" == "true" ]]; then
     cd ${source_dir}
 
     # load the necessary modules, depend on your hpc env
