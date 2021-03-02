@@ -206,6 +206,9 @@ and transfer the files and directories to `${SLURM_TMPDIR}`. You can then access
 the files and directories on `${SLURM_TMPDIR}` using the same paths used when
 using the `-d, --data` option.
 
+If a tarball already exists, no new tarball is created. If you want to update
+the tarball you should delete the old one first.
+
 ### Example
 
 Assume you have work on a project named `project_root`, and on `${SCRATCH}` you
