@@ -156,9 +156,10 @@ if [ ! -z "${SCRATCH}" ]; then
       stuff_to_tar_suffix=$(tr ' |/' '_' <<< ${stuff_to_tmp})
       tarball="${scratch_dir}/tar_ball_${stuff_to_tar_suffix}.tar"
 
-      echo "Creating tarball"
-      time tar -cf "${tarball}" \
-          "${scratch_dir}/${stuff_to_tmp}"
+      if [ ! -f "${tarball}" ]; then
+        echo "Creating tarball"
+        time tar -cf "${tarball}" "${scratch_dir}/${stuff_to_tmp}"
+      fi
   fi
 
   if [[ ! "${singularity_container}" == "true" ]]; then
