@@ -28,7 +28,7 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     -h|--help)
-      echo .help_message.txt
+      cat .help_message.txt
       exit
       ;;
     -g|--gpus)

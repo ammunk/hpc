@@ -4,7 +4,7 @@ Submit a job based on the provided options
 -a, --account                 Account to use on cedar (def-fwood, rrg-kevinlb).
                                 Ignored on the PLAI cluster. Default: rrg-kevinlb
 -g, --gpus                    Number of gpus per node. Default: 1
--c, --cpu                     Number of cpus per node: Default: 2
+-c, --cpus                    Number of cpus per node: Default: 2
 -j, --job-type                Type of job to run, one of
                                 (standard, sweep, distributed).
                                 Default: standard
@@ -20,11 +20,6 @@ Submit a job based on the provided options
 -e, --exp-name                Name of the experiment. Used to created convenient
                                 folders in ${SCRATCH}/${project_name} and to name
                                 the generated output files. Default: "" (empty)
--w, --wandb-sweepid           The wandb sweep id. When specified the scripts will
-                                submit an array job. The script determine the
-                                number of array jobs by promting the user for the
-                                number of sweeps. Array jobs will only request a
-                                single (1) gpu on a single (1) node
 -n, --num_nodes               Number of nodes. Default: 1
 -d, --data                    Whitespace separated list of paths to directories or
                                 files to transfer to ${SLURM_TMPDIR}. These paths
