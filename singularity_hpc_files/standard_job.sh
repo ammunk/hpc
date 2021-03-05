@@ -20,8 +20,9 @@ if [[ "${scratch_dir}" == *"scratch"* ]]; then
     cd ${source_dir}
     time rsync -av "${container_path}" "${SLURM_TMPDIR}"
 
-    if [ ! -z ${tarball} ]; then
+    if [ ! -z "${tarball}"  ]; then
         # go to temporary directory
+        echo "Moving ${tarball} to local node"
         time tar -xf "${tarball}" \
             -C ${SLURM_TMPDIR} --strip-components=$(wc -w <<< $(tr "/" " " <<< ${scratch_dir}))
     fi

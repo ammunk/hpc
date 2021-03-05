@@ -19,8 +19,9 @@ if [[ "${SLURM_TMPDIR}" == *"scratch-ssd"* ]]; then
     mkdir -p ${SLURM_TMPDIR}
 fi
 
-if [ ! -z ${tarball}  ]; then
+if [ ! -z "${tarball}"  ]; then
     # go to temporary directory
+    echo "Moving ${tarball} to local node"
     time tar -xf "${tarball}" \
         -C ${SLURM_TMPDIR} --strip-components=$(wc -w <<< $(tr "/" " " <<< ${scratch_dir}))
 fi
