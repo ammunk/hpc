@@ -102,7 +102,7 @@ while [[ $# -gt 0 ]]; do
       stuff_to_tmp="$(echo "$@" | awk -F'--' '{print $2}')" # includes the argument flag itself
       shift "$(echo "$stuff_to_tmp" | awk '{print NF}')"
       # remove argument flag
-      stuff_to_tmp="$(cut -d ' ' -f2- <<< ${stuff_to_tmp})" # includes the argument flag itself
+      stuff_to_tmp="$(cut -d ' ' -f2- <<< ${stuff_to_tmp} | sed 's/ *$//')"
       ;;
     -s|--singularity-container)
       singularity_container="$2"
@@ -129,161 +129,164 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [ ! -z "${SCRATCH}" ]; then
-  scratch_dir="${SCRATCH}/${project_name}"
-  if [ ! -z ${singularity_container} ]; then
-    singularity_job=true
-  fi
+echo $stuff_to_tmp
+echo $account
 
-  if [ "${job_type}" == "distributed" ] && [ -z ${which_distributed} ]; then
-    echo "Must specify the type of distributed job using [-W, --which_distributed]" >&2; exit 1
-  fi
+# if [ ! -z "${SCRATCH}" ]; then
+#   scratch_dir="${SCRATCH}/${project_name}"
+#   if [ ! -z ${singularity_container} ]; then
+#     singularity_job=true
+#   fi
 
-  # set the path to a file which contains the wandb api key
-  WANDB_CREDENTIALS_PATH=~/wandb_credentials.txt
-  WANDB_API_KEY=$(cat $WANDB_CREDENTIALS_PATH)
+#   if [ "${job_type}" == "distributed" ] && [ -z ${which_distributed} ]; then
+#     echo "Must specify the type of distributed job using [-W, --which_distributed]" >&2; exit 1
+#   fi
 
-  if [ ! -d "${scratch_dir}/${exp_name}/checkpoints" ]; then
-      mkdir -p "${scratch_dir}/${exp_name}/checkpoints"
-  fi
+#   # set the path to a file which contains the wandb api key
+#   WANDB_CREDENTIALS_PATH=~/wandb_credentials.txt
+#   WANDB_API_KEY=$(cat $WANDB_CREDENTIALS_PATH)
 
-  if [ ! -d "${scratch_dir}/hpc_outputs}" ]; then
-    mkdir -p "${scratch_dir}/hpc_outputs"
-  fi
+#   if [ ! -d "${scratch_dir}/${exp_name}/checkpoints" ]; then
+#       mkdir -p "${scratch_dir}/${exp_name}/checkpoints"
+#   fi
 
-  # create tarball
-  if [ ! -z "${stuff_to_tmp}" ]; then
-      stuff_to_tar_suffix=$(tr ' |/' '_' <<< ${stuff_to_tmp})
-      tarball="${scratch_dir}/tar_ball_${stuff_to_tar_suffix}.tar"
+#   if [ ! -d "${scratch_dir}/hpc_outputs}" ]; then
+#     mkdir -p "${scratch_dir}/hpc_outputs"
+#   fi
 
-      if [ ! -f "${tarball}" ]; then
-        echo "Creating tarball"
-        time tar -cf "${tarball}" "${scratch_dir}/${stuff_to_tmp}"
-      fi
-  fi
+#   # create tarball
+#   if [ ! -z "${stuff_to_tmp}" ]; then
+#       stuff_to_tar_suffix=$(tr ' |/' '_' <<< ${stuff_to_tmp})
+#       tarball="${scratch_dir}/tar_ball_${stuff_to_tar_suffix}.tar"
 
-  if [[ ! "${singularity_container}" == "true" ]]; then
-    cd ${source_dir}
+#       if [ ! -f "${tarball}" ]; then
+#         echo "Creating tarball"
+#         time tar -cf "${tarball}" "${scratch_dir}/${stuff_to_tmp}"
+#       fi
+#   fi
 
-    # load the necessary modules, depend on your hpc env
-    if [[ "$(hostname)" == *"cedar"* ]]; then
-      module load python/3.8.2
-    fi
+#   if [[ ! "${singularity_container}" == "true" ]]; then
+#     cd ${source_dir}
 
-    if [ ! -d virtual_env ]; then
-      # setup virtual environment
-      mkdir virtual_env
-      python3 -m venv virtual_env
-      source virtual_env/bin/activate
+#     # load the necessary modules, depend on your hpc env
+#     if [[ "$(hostname)" == *"cedar"* ]]; then
+#       module load python/3.8.2
+#     fi
 
-      pip install --upgrade pip
-      pip install torch==1.7.1+cu110 torchvision==0.8.2+cu110 \
-          torchaudio===0.7.2 -f https://download.pytorch.org/whl/torch_stable.html
-      if [ -f Pipfile ]; then
-        pip install pipenv
-        # we skip locking as it takes quite some time and is redundant
-        # note that we use the Pipfile and not the Pipfile.lock here -
-        # this is because compute canada's wheels may not include the specific
-        # versions specified in the Pipfile.lock file. The Pipfile is a bit less
-        # picky and so allows the packages to be installed. Although this could mean
-        # slightly inconsistencies in the various versions of the packages.
-        time pipenv install --skip-lock
-      elif [ -f requirements.txt ]; then
-        pip install -r requirements.txt
-      else
-        echo "No file specifying python packge dependencies."
-      fi
-    else
-      echo "Virtual environment already exists"
-    fi
-    hpc_file_location="${source_dir}/hpc_files/virtual_env_hpc_files"
-    args=("${tarball}")
-  else
-    hpc_file_location="${source_dir}/hpc_files/singularity_hpc_files"
-    args=("${tarball}" "${workdir}")
-  fi
-  cd ${hpc_files_dir}
+#     if [ ! -d virtual_env ]; then
+#       # setup virtual environment
+#       mkdir virtual_env
+#       python3 -m venv virtual_env
+#       source virtual_env/bin/activate
 
-  if [[ ${job_type} == "sweep" ]]; then
-    echo "About to submit a wandb sweep. Setting gpus=1 and num_nodes=1"
-    gpus=1
-    num_nodes=1
-    which_distributed="" # ensure no distributed training
-    read -p 'Specify sweeper id: '
-    sweepid="${REPLY}"
-    read -p 'Specify number of sweeps: '
-    if  [[ ! ${REPLY} =~ $re ]]; then
-      echo "number of sweeps must be integer" >&2; exit 1
-    fi
-    n_sweeps=${REPLY}
-    hpc_file_location="${hpc_file_location}/standard_job.sh"
-    if [[ "$(hostname)" == *"borg"* ]]; then
-      sbatch_cmd=(--array 1-${n_sweeps}%10)
-    elif [[ "$(hostname)" == *"cedar"* ]]; then
-      sbatch_cmd=(--array 1-${n_sweeps})
-    fi
-    sbatch_cmd+=(--tasks-per-node=1 \
-      --job-name="sweep-${project_name}-${exp_name}" \
-      -o "${SCRATCH}/${project_name}/hpc_outputs/sweep_${exp_name}_%A_%a.out")
-  elif [[ ${job_type} == "standard" ]]; then
-    echo "About to submit a standard job. Setting num_nodes=1"
-    num_nodes=1
-    hpc_file_location="${hpc_file_location}/standard_job.sh"
-    sbatch_cmd=(--tasks-per-node=1 \
-      --job-name="standard-${project_name}-${exp_name}" \
-      -o "${SCRATCH}/${project_name}/hpc_outputs/standard_${exp_name}_%j.out")
-  elif [[ ${job_type} == "distributed" ]]; then
-    echo "About to submit a ditributed job of type \"${which_distributed}\""
-    sbatch_cmd=(-o "${SCRATCH}/${project_name}/hpc_outputs/${which_distributed}_${exp_name}_%j.out" \
-      --job-name="${which_distributed}_dist-${project_name}-${exp_name}")
-    hpc_file_location="${hpc_file_location}/distributed_dispatcher.sh"
-    if [[ ${which_distributed} == "lightning" ]]; then
-      sbatch_cmd+=(--tasks-per-node=${gpus})
-    elif [[ ${which_distributed} == "script" ]]; then
-      cpu=$((${cpus}*${gpus}))
-      sbatch_cmd+=(--tasks-per-node=1)
-    fi
-  fi
+#       pip install --upgrade pip
+#       pip install torch==1.7.1+cu110 torchvision==0.8.2+cu110 \
+#           torchaudio===0.7.2 -f https://download.pytorch.org/whl/torch_stable.html
+#       if [ -f Pipfile ]; then
+#         pip install pipenv
+#         # we skip locking as it takes quite some time and is redundant
+#         # note that we use the Pipfile and not the Pipfile.lock here -
+#         # this is because compute canada's wheels may not include the specific
+#         # versions specified in the Pipfile.lock file. The Pipfile is a bit less
+#         # picky and so allows the packages to be installed. Although this could mean
+#         # slightly inconsistencies in the various versions of the packages.
+#         time pipenv install --skip-lock
+#       elif [ -f requirements.txt ]; then
+#         pip install -r requirements.txt
+#       else
+#         echo "No file specifying python packge dependencies."
+#       fi
+#     else
+#       echo "Virtual environment already exists"
+#     fi
+#     hpc_file_location="${source_dir}/hpc_files/virtual_env_hpc_files"
+#     args=("${tarball}")
+#   else
+#     hpc_file_location="${source_dir}/hpc_files/singularity_hpc_files"
+#     args=("${tarball}" "${workdir}")
+#   fi
+#   cd ${hpc_files_dir}
 
-  sbatch_cmd+=(--nodes="${num_nodes}" \
-    --time="${time}" \
-    --mem-per-gpu="${mem_per_gpu}"\
-    --cpus-per-task="${cpus}")
+#   if [[ ${job_type} == "sweep" ]]; then
+#     echo "About to submit a wandb sweep. Setting gpus=1 and num_nodes=1"
+#     gpus=1
+#     num_nodes=1
+#     which_distributed="" # ensure no distributed training
+#     read -p 'Specify sweeper id: '
+#     sweepid="${REPLY}"
+#     read -p 'Specify number of sweeps: '
+#     if  [[ ! ${REPLY} =~ $re ]]; then
+#       echo "number of sweeps must be integer" >&2; exit 1
+#     fi
+#     n_sweeps=${REPLY}
+#     hpc_file_location="${hpc_file_location}/standard_job.sh"
+#     if [[ "$(hostname)" == *"borg"* ]]; then
+#       sbatch_cmd=(--array 1-${n_sweeps}%10)
+#     elif [[ "$(hostname)" == *"cedar"* ]]; then
+#       sbatch_cmd=(--array 1-${n_sweeps})
+#     fi
+#     sbatch_cmd+=(--tasks-per-node=1 \
+#       --job-name="sweep-${project_name}-${exp_name}" \
+#       -o "${SCRATCH}/${project_name}/hpc_outputs/sweep_${exp_name}_%A_%a.out")
+#   elif [[ ${job_type} == "standard" ]]; then
+#     echo "About to submit a standard job. Setting num_nodes=1"
+#     num_nodes=1
+#     hpc_file_location="${hpc_file_location}/standard_job.sh"
+#     sbatch_cmd=(--tasks-per-node=1 \
+#       --job-name="standard-${project_name}-${exp_name}" \
+#       -o "${SCRATCH}/${project_name}/hpc_outputs/standard_${exp_name}_%j.out")
+#   elif [[ ${job_type} == "distributed" ]]; then
+#     echo "About to submit a ditributed job of type \"${which_distributed}\""
+#     sbatch_cmd=(-o "${SCRATCH}/${project_name}/hpc_outputs/${which_distributed}_${exp_name}_%j.out" \
+#       --job-name="${which_distributed}_dist-${project_name}-${exp_name}")
+#     hpc_file_location="${hpc_file_location}/distributed_dispatcher.sh"
+#     if [[ ${which_distributed} == "lightning" ]]; then
+#       sbatch_cmd+=(--tasks-per-node=${gpus})
+#     elif [[ ${which_distributed} == "script" ]]; then
+#       cpu=$((${cpus}*${gpus}))
+#       sbatch_cmd+=(--tasks-per-node=1)
+#     fi
+#   fi
 
-  cmd=$(tr -d '\n\r\\' < "${exp_configs_path}")
-  if [ ! -z "${sweepid}" ]; then
-    cmd="$(sed -r 's/\/[0-9a-zA-Z]+$/\/'${sweepid}'/' <<< ${cmd})"
-    echo "About to submit a sweep with the following command: ${cmd}"
-  fi
-  variables="scratch_dir=${scratch_dir},source_dir=${source_dir},\
-exp_name=${exp_name},WANDB_API_KEY=${WANDB_API_KEY},cmd=${cmd},\
-which_distributed=${which_distributed},\
-singularity_container=${singularity_container}"
+#   sbatch_cmd+=(--nodes="${num_nodes}" \
+#     --time="${time}" \
+#     --mem-per-gpu="${mem_per_gpu}"\
+#     --cpus-per-task="${cpus}")
 
-  if [[ "$(hostname)" == *"borg"* ]]; then
-      sbatch_cmd+=(--partition="plai" --gpus-per-node="${gpus}")
-      slurm_tmpdir="/scratch-ssd/${USER}"
-      variables="${variables},SLURM_TMPDIR=${slurm_tmpdir}"
-  elif [[ "$(hostname)" == *"cedar"* ]]; then
-      sbatch_cmd+=(--gpus-per-node="${gpu_type}:${gpus}" --account="${account}")
-  fi
-  sbatch_cmd+=(--export=ALL,"${variables}")
+#   cmd=$(tr -d '\n\r\\' < "${exp_configs_path}")
+#   if [ ! -z "${sweepid}" ]; then
+#     cmd="$(sed -r 's/\/[0-9a-zA-Z]+$/\/'${sweepid}'/' <<< ${cmd})"
+#     echo "About to submit a sweep with the following command: ${cmd}"
+#   fi
+#   variables="scratch_dir=${scratch_dir},source_dir=${source_dir},\
+# exp_name=${exp_name},WANDB_API_KEY=${WANDB_API_KEY},cmd=${cmd},\
+# which_distributed=${which_distributed},\
+# singularity_container=${singularity_container}"
 
-  function do_continue {
-    echo "The following sbatch options will be set:"
-    vars=("$@")
-    echo "${vars[@]}"
-    echo "Do you want to continue?"
-    select yn in "Yes" "No"; do
-      case $yn in
-        Yes) break;;
-        No) exit;;
-      esac
-    done
-  }
+#   if [[ "$(hostname)" == *"borg"* ]]; then
+#       sbatch_cmd+=(--partition="plai" --gpus-per-node="${gpus}")
+#       slurm_tmpdir="/scratch-ssd/${USER}"
+#       variables="${variables},SLURM_TMPDIR=${slurm_tmpdir}"
+#   elif [[ "$(hostname)" == *"cedar"* ]]; then
+#       sbatch_cmd+=(--gpus-per-node="${gpu_type}:${gpus}" --account="${account}")
+#   fi
+#   sbatch_cmd+=(--export=ALL,"${variables}")
 
-  do_continue "${sbatch_cmd[@]}"
-  sbatch "${sbatch_cmd[@]}" "${hpc_file_location}" "${args[@]}"
-else
-    echo "SCRATCH variable not assigned" >&2; exit 1
-fi
+#   function do_continue {
+#     echo "The following sbatch options will be set:"
+#     vars=("$@")
+#     echo "${vars[@]}"
+#     echo "Do you want to continue?"
+#     select yn in "Yes" "No"; do
+#       case $yn in
+#         Yes) break;;
+#         No) exit;;
+#       esac
+#     done
+#   }
+
+#   do_continue "${sbatch_cmd[@]}"
+#   sbatch "${sbatch_cmd[@]}" "${hpc_file_location}" "${args[@]}"
+# else
+#     echo "SCRATCH variable not assigned" >&2; exit 1
+# fi
