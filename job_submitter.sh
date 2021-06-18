@@ -191,7 +191,7 @@ if [ ! -z "${SCRATCH}" ]; then
       elif [ -f requirements.txt ]; then
         pip install -r requirements.txt
       else
-        echo "No file specifying python packge dependencies."
+        echo "No file specifying python package dependencies."
       fi
     else
       echo "Virtual environment already exists"
