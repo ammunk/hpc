@@ -177,8 +177,8 @@ if [ ! -z "${SCRATCH}" ]; then
       source virtual_env/bin/activate
 
       pip install --upgrade pip
-      pip install torch==1.7.1+cu110 torchvision==0.8.2+cu110 \
-          torchaudio===0.7.2 -f https://download.pytorch.org/whl/torch_stable.html
+      pip install torch==1.9.0+cu111 torchvision==0.10.0+cu111 \
+        torchaudio==0.9.0 -f https://download.pytorch.org/whl/torch_stable.html
       if [ -f Pipfile ]; then
         pip install pipenv
         # we skip locking as it takes quite some time and is redundant
@@ -191,7 +191,7 @@ if [ ! -z "${SCRATCH}" ]; then
       elif [ -f requirements.txt ]; then
         pip install -r requirements.txt
       else
-        echo "No file specifying python packge dependencies."
+        echo "No file specifying python package dependencies."
       fi
     else
       echo "Virtual environment already exists"
