@@ -152,8 +152,8 @@ if [ ! -z "${SCRATCH}" ]; then
   fi
 
   # create tarball
-  if [ ! -z "${stuff_to_tmp}" ]; then
-      stuff_to_tar_suffix=$(tr ' |/' '_' <<< ${stuff_to_tmp})
+  if [ ! -z "${stuff_to_tmp}" ] && [ ! -f "${stuff_to_tmp}" ]; then
+      stuff_to_tar_suffix="$(tr ' |/' '_' <<< ${stuff_to_tmp})"
       tarball="${scratch_dir}/tar_ball_${stuff_to_tar_suffix}.tar"
 
       if [ ! -f "${tarball}" ]; then
