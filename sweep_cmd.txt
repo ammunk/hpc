@@ -1,1 +1,1 @@
-wandb agent --count 1 muffiuz/GanDDPM-GanDDPM/SWEEEPID
+wandb agent --count 1 muffiuz/PROJECT_ROOT/SWEEEPID
