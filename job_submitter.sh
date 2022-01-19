@@ -167,35 +167,67 @@ if [ ! -z "${SCRATCH}" ]; then
 
     # load the necessary modules, depend on your hpc env
     if [[ "$(hostname)" == *"cedar"* ]]; then
-      module load python/3.8.2
+      module load python/3.9 cuda
     fi
 
-    if [ ! -d virtual_env ]; then
-      # setup virtual environment
-      mkdir virtual_env
-      python3 -m venv virtual_env
-      source virtual_env/bin/activate
+    sbatch_virtualenv_cmd=(-W --account="${account}" \
+      -o "${SCRATCH}/python_virtualenv_installer_output.out" \
+      --job-name="virtualenv-creator" --mem="10G")
 
-      pip install --upgrade pip
-      pip install torch==1.9.0+cu111 torchvision==0.10.0+cu111 \
-        torchaudio==0.9.0 -f https://download.pytorch.org/whl/torch_stable.html
-      if [ -f Pipfile ]; then
-        pip install pipenv
-        # we skip locking as it takes quite some time and is redundant
-        # note that we use the Pipfile and not the Pipfile.lock here -
-        # this is because compute canada's wheels may not include the specific
-        # versions specified in the Pipfile.lock file. The Pipfile is a bit less
-        # picky and so allows the packages to be installed. Although this could mean
-        # slightly inconsistencies in the various versions of the packages.
-        time pipenv install --skip-lock
-      elif [ -f requirements.txt ]; then
-        pip install -r requirements.txt
+    if [[ "$(hostname)" == *"borg"* ]]; then
+        sbatch_virtualenv_cmd+=(--partition="plai")
+    elif [[ "$(hostname)" == *"cedar"* ]]; then
+        sbatch_virtualenv_cmd+=(--account="${account}")
+    fi
+
+    # install python packages as a submitted job
+    # use -W to wait for the job to finish
+    echo "Submitting virtualenv installer job"
+    sbatch "${sbatch_virtualenv_cmd[@]}"  hpc_files/install_python_packages.sh &
+    virtualenv_process_id=$!
+    pending=0
+    runnning=0
+    submitted=0
+    while ps | grep "${virtualenv_process_id}" 1> /dev/null; do
+      job_query="$(squeue -u amunk | grep "virtualenv" | tr -s " " | sed 's/^ //')"
+      job_id="$(echo "$job_query" | cut -d ' ' -f 1)"
+      job_status="$(echo "$job_query" | cut -d ' ' -f 5)"
+
+      if [ ! -z "${job_id}" ]; then
+        case "$job_status" in
+          PD)
+            if (( pending == 0 )) ; then
+              echo "Job ${job_id} is pending"
+              pending=1
+            fi
+            ;;
+          R)
+            if (( running == 0 )) ; then
+              echo "Job ${job_id} is running and installing virtual environment"
+              running=1
+            fi
+            ;;
+          *)
+            echo "Status is neither R nor PD"
+        esac
       else
-        echo "No file specifying python package dependencies."
+        if (( submitted == 0 )) ; then
+          echo "Job still being submitted"
+          submitted=1
+        fi
       fi
+      sleep 2
+    done
+    # The variable $? always holds the exit code of the last command to finish.
+    # Here it holds the exit code of $my_pid, since wait exits with that code.
+    wait $virtualenv_process_id
+    virtualenv_job_status=$?
+    if (( virtualenv_job_status == 0 )); then
+      echo "Finished installing virtualenv"
     else
-      echo "Virtual environment already exists"
+      echo "Failed to install virtualenv" >&2; exit 1
     fi
+
     hpc_file_location="${source_dir}/hpc_files/virtual_env_hpc_files"
     args=("${tarball}")
   else
@@ -258,7 +290,7 @@ if [ ! -z "${SCRATCH}" ]; then
   variables="scratch_dir=${scratch_dir},source_dir=${source_dir},\
 exp_name=${exp_name},WANDB_API_KEY=${WANDB_API_KEY},cmd=${cmd},\
 which_distributed=${which_distributed},\
-singularity_container=${singularity_container}"
+singularity_container=${singularity_container},LD_LIBRARY_PATH=/home/${USER}/.mujoco/mujoco200/bin"
 
   if [[ "$(hostname)" == *"borg"* ]]; then
       sbatch_cmd+=(--partition="plai" --gpus-per-node="${gpus}")
