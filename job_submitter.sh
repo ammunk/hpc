@@ -170,6 +170,72 @@ if [ ! -z "${SCRATCH}" ]; then
       module load python/3.9 cuda
     fi
 
+    if [ ! -d virtual_env ]; then
+
+      sbatch_virtualenv_cmd=(-W --account="${account}" \
+        -o "${SCRATCH}/python_virtualenv_installer_output.out" \
+        --job-name="virtualenv-creator" --mem="10G")
+
+      if [[ "$(hostname)" == *"borg"* ]]; then
+          sbatch_virtualenv_cmd+=(--partition="plai")
+      elif [[ "$(hostname)" == *"cedar"* ]]; then
+          sbatch_virtualenv_cmd+=(--account="${account}")
+      fi
+
+
+      # install python packages as a submitted job
+      # use -W to wait for the job to finish
+      echo "Submitting virtualenv installer job"
+      sbatch "${sbatch_virtualenv_cmd[@]}"  hpc_files/install_python_packages.sh &
+      virtualenv_process_id=$!
+      pending=0
+      runnning=0
+      submitted=0
+      while ps | grep "${virtualenv_process_id}" 1> /dev/null; do
+        job_query="$(squeue -u amunk | grep "virtualenv" | tr -s " " | sed 's/^ //')"
+        job_id="$(echo "$job_query" | cut -d ' ' -f 1)"
+        job_status="$(echo "$job_query" | cut -d ' ' -f 5)"
+
+        if [ ! -z "${job_id}" ]; then
+          case "$job_status" in
+            PD)
+              if (( pending == 0 )) ; then
+                echo "Job ${job_id} is pending"
+                pending=1
+              fi
+              ;;
+            R)
+              if (( running == 0 )) ; then
+                echo "Job ${job_id} is running and installing virtual environment"
+                running=1
+              fi
+              ;;
+            *)
+              echo "Status is neither R nor PD"
+          esac
+        else
+          if (( submitted == 0 )) ; then
+            echo "Job still being submitted"
+            submitted=1
+          fi
+        fi
+        sleep 2
+      done
+      # The variable $? always holds the exit code of the last command to finish.
+      # Here it holds the exit code of $my_pid, since wait exits with that code.
+      wait $virtualenv_process_id
+      virtualenv_job_status=$?
+      if (( virtualenv_job_status == 0 )); then
+        echo "Finished installing virtualenv"
+      else
+        echo "Failed to install virtualenv" >&2; exit 1
+      fi
+
+    else
+      echo "Virtual environment already exists"
+    fi
+
+
     sbatch_virtualenv_cmd=(-W --account="${account}" \
       -o "${SCRATCH}/python_virtualenv_installer_output.out" \
       --job-name="virtualenv-creator" --mem="10G")
