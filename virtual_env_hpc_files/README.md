@@ -49,11 +49,11 @@ python main.py \
 
 For multi-node gpu distributed training, these scripts assume you use PyTorch,
 either manually using the `torch.distributed.launch` script or PyTorch
-Lightning. However, since distributed applications need to how the number of
+Lightning. However, since distributed applications need to know the number of
 processes that communicate as well as where they are running etc. this
 information must be provided somehow. The format for doing this depends on which
-approach is taken, and these scripts force you ensure that your application can
-absorb additional argument appropriate for each approach.
+approach is taken, and these scripts force you to ensure that your application
+can absorb additional arguments appropriate for each approach.
 
 ##### Distributed training managaed by Lightning
 
@@ -84,7 +84,7 @@ and use them appropriately as described in Lightning's
 
 The only requirement imposed using `torch.distributed.launch` is that your
 experiment take the argument `--local-rank` as the first given argument. This
-requirement is, in fact, imposed by the `torch.distributed.launch`. For example
+requirement is, in fact, imposed by the `torch.distributed.launch`. For example,
 if your command looks like this
 
 ```bash
