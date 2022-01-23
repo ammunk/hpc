@@ -338,7 +338,7 @@ if [ ! -z "${SCRATCH}" ]; then
     if [[ ${which_distributed} == "lightning" ]]; then
       sbatch_cmd+=(--tasks-per-node=${gpus})
     elif [[ ${which_distributed} == "script" ]]; then
-      cpu=$((${cpus}*${gpus}))
+      cpus=$((${cpus}*${gpus}))
       sbatch_cmd+=(--tasks-per-node=1)
     fi
   fi

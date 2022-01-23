@@ -55,7 +55,7 @@ information must be provided somehow. The format for doing this depends on which
 approach is taken, and these scripts force you to ensure that your application
 can absorb additional arguments appropriate for each approach.
 
-##### Distributed training managaed by Lightning
+##### Distributed training managed by Lightning
 
 A multi-node distributed gpu experiment managed by lightning **requires**
 knowing the number of gpus per node and total number of nodes. Therefore the
