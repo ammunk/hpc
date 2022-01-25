@@ -442,14 +442,6 @@ found in `/scratch-ssd` that matches the pattern `${USER}*`.
 
 ## TODO
 - [ ] Support multi-node distributed GPU training for Singularity based jobs.
-- [ ] Make script to transfers data from scratch to allocated nodes. This script
-      should be executed before the computation script.
-- [ ] Add a repeat option to do multi-seeded experiments.
-- [ ] A single file with application configuration.
-- [ ] Check if a wandb sweeper id is in the application configurations. If it
-      is, it should take precedence over a job submitter specified wandb sweep
-      id. Print a warning statement if these two differ.
-- [ ] Remove seed option. Make part of application configurations
 
 [sweeper.yml]: (sweeper.yml)
 [Singularity readme]: (singularity_hpc_files/README.md)
