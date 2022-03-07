@@ -80,23 +80,14 @@ You must there ensure that your experiment can absorb these additional arguments
 and use them appropriately as described in Lightning's
 [documentation](https://pytorch-lightning.readthedocs.io/en/stable/advanced/multi_gpu.html#distributed-data-parallel).
 
-#### `torch.distributed.launch` distributed job
+#### `torchrun` distributed job
 
-The only requirement imposed using `torch.distributed.launch` is that your
-experiment take the argument `--local-rank` as the first given argument. This
-requirement is, in fact, imposed by the `torch.distributed.launch`. For example,
-if your command looks like this
+Using `torchrun` set the `LOCAL_RANK` (process rank on the local node),
+`LOCAL_WORLD_SIZE` (number of processes on each node), and `GLOBAL_WORLD_SIZE`
+(total number of processes) environment variables. Use these for setting up your
+distributed program.
 
-```bash
-python [your commands]
-```
-it will be changed to
-
-```bash
-python --local_rank local_rank [your commands]
-```
-
-### Adding your own (additional) configuration files
+### Adding your own configuration files
 
 You can also create your own configuration files. Just provide the path to the
 job submitter,
@@ -105,5 +96,5 @@ job submitter,
 bash job_submitter.sh --configs PATH_TO_YOU_CONFIG_FILE
 ```
 
-[experiment_configurations.txt]: (../experiment_configurations.txt) 
-[sweeper.yml]: (../sweeper.yml) 
+[experiment_configurations.txt]: ../experiment_configurations.txt
+[sweeper.yml]: ../sweeper.yml

@@ -46,8 +46,8 @@ read/write operations - i.e. using `SLURM_TMPDIR`.
 
 The created folders and their location are easily accessible as [environment
 variables](#environment-variables). One thing to pay attention to is that
-Singularity based jobs needs additional folders than the virtual environment
-based ones. For details see the [created folders](#created-folders).
+Singularity based jobs needs additional folders compared to the virtual
+environment based jobs. For details see the [created folders](#created-folders).
 
 #### Important:
 
@@ -83,54 +83,48 @@ experiment's configurations depend on which type:
   details.
 - Single jobs which supports multi-node distributed gpu applications
   - The experiments configurations are specified using the
-    [experiment_configuration.txt] file. It's
-    format differs slightly depending on whether you use Singularity or a
-    virtual environment. For details, see the [Singularity readme] or the
-    [virtual environment readme].
+    [experiment_configurations.txt] file. It's format differs slightly depending
+    on whether you use Singularity or a virtual environment. For details, see
+    the [Singularity readme] or the [virtual environment readme].
 
 The options that control the job submissions are:
 
 ``` text
--a, --account                 Account to use on cedar (def-fwood, rrg-kevinlb). 
+-a, --account                 Account to use on cedar (def-fwood, rrg-kevinlb).
                                 Ignored on the PLAI cluster. Default: rrg-kevinlb
 -g, --gpus                    Number of gpus per node. Default: 1
--c, --cpu                     Number of cpus per node: Default: 2
--j, --job-type                Type of job to run, one of 
-                                (standard, sweep, distributed). 
-                                Default: standard 
+-c, --cpus                    Number of cpus per node: Default: 2
+-j, --job-type                Type of job to run, one of
+                                (standard, sweep, distributed).
+                                Default: standard
 -W, --which-distributed       Kind of distributed gpu application backend used
-                                (lightning, script). Must be provided if using 
+                                (lightning, torchrun). Must be provided if using
                                 "--job-type distributed"
--t, --time                    Requested runtime. Format: dd-HH:MM:SS. 
+-t, --time                    Requested runtime. Format: dd-HH:MM:SS.
                                 Default: 00-01:00:00
--m, --mem-per-gpu             Amount of memory per requested gpu. E.g. 10G or 10M.
+-m, --mem                     Amount of memory per node. E.g. 10G or 10M.
                                 Default: 10G
--G, --gpu-type               Type of gpu to use (p100, p100l, v100l). Ignored on
+-G, --gpu-type                Type of gpu to use (p100, p100l, v100l). Ignored on
                                 the PLAI cluster. Default: v100l
--e, --exp-name                Name of the experiment. Used to created convenient 
-                                folders in ${SCRATCH}/${project_name} and to name 
+-e, --exp-name                Name of the experiment. Used to created convenient
+                                folders in ${SCRATCH}/${project_name} and to name
                                 the generated output files. Default: "" (empty)
--w, --wandb-sweepid           The wandb sweep id. When specified the scripts will
-                                submit an array job. The script determine the 
-                                number of array jobs by promting the user for the 
-                                number of sweeps. Array jobs will only request a 
-                                single (1) gpu on a single (1) node
 -n, --num_nodes               Number of nodes. Default: 1
--d, --data                    Whitespace separated list of paths to directories or 
-                                files to transfer to ${SLURM_TMPDIR}. These paths 
+-d, --data                    Whitespace separated list of paths to directories or
+                                files to transfer to ${SLURM_TMPDIR}. These paths
                                 MUST be relative to ${SCRATCH}/${project_name}
--s, --singularity-container   Path to singularity container. If specified the 
+-s, --singularity-container   Path to singularity container. If specified the
                                 job is submitted as a Singularity based job
--w, --workdir                 Path to a mounted working directory in the 
+-w, --workdir                 Path to a mounted working directory in the
                                 Singularity container
--C, --configs                 Path to file specifying the experiment 
+-C, --configs                 Path to file specifying the experiment
                                 configuration. Default: experiment_configurations.txt
 
 -h, --help                    Show this message
 ```
 #### Example
 
-Assume we have a project with the [appropriate structure](#project-structure)
+Assume we have a project with the [appropriate structure](#project-structure).
 
 
 To submit a job first `cd [path_to_project]/hpc_files`, and then
@@ -175,11 +169,10 @@ This will create a pending sweep on `wandb`'s servers. Then in
 `project_root/hpc_files` do
 
 ``` bash
-bash job_submitter.sh --wandb-sweepid [some id]
+bash job_submitter.sh --job_type sweep [other options]
 ```
 
-The script will then prompt for the number of sweeps which will `wandb` will
-track as part of the sweep.
+The script will then prompt for the sweep id and the number of sweeps.
 
 The provided [sweeper.yml] file can serve as a template, but should be
 modified to your specific sweep. Think of the [sweeper.yml] file as the
@@ -199,20 +192,18 @@ To copy data to the local nodes when submitting a job, simply use the `-d,
 whitespace separated list of **relative** paths.
 
 The main purpose of this functionality is to copy large amounts of data, which
-typically is stored on `${SCRTACH}`. This would for instance be large datasets,
-etc. Therefore, the paths are going to be relative to
-`${SCRATCH}/${project_name}`. The script will then create a tarball using `tar`
-and transfer the files and directories to `${SLURM_TMPDIR}`. You can then access
-the files and directories on `${SLURM_TMPDIR}` using the same paths used when
-using the `-d, --data` option.
+typically is stored on `${SCRTACH}`. Therefore, the paths are going to be
+relative to `${SCRATCH}/${project_name}`. The script will then create a tarball
+using `tar` and transfer the files and directories to `${SLURM_TMPDIR}`. You can
+then access the files and directories on `${SLURM_TMPDIR}` using the same paths
+used when using the `-d, --data` option.
 
 If a tarball already exists, no new tarball is created. If you want to update
 the tarball you should delete the old one first.
 
 ### Example
 
-Assume you have work on a project named `project_root`, and on `${SCRATCH}` you
-have,
+Assume you work on a project named `project_root`, and on `${SCRATCH}` you have,
 
 ``` text
 ${SCRATCH}
@@ -271,8 +262,7 @@ python my_program.py --data_dir=${SLURM_TMPDIR}/datasets/dataset1 [other argumen
 The scripts have been tested with two different ways to do multi-node
 distributed gpu training with [PyTorch]('https://pytorch.org/'),
 
-- Using PyTorch's [launch
-  script](https://github.com/pytorch/pytorch/blob/master/torch/distributed/launch.py)
+- Using PyTorch's [`torchrun`](https://pytorch.org/docs/stable/elastic/run.html)
 - [PyTorch Lightning](https://www.pytorchlightning.ai/)
 
 
@@ -293,49 +283,45 @@ check out my [distributed training
 repository](https://github.com/ammunk/distributed-training-pytorch) which also
 uses the hpc scripts found here.
 
-### Lightning (recommended)
+### Lightning
 
-Lightning is built on pure PyTorch, and requires your code to be written using a
-certain structure (which is rather intuitive and sensible). It has a lot of
-functionality, but it attempts to streamline the training process to be agnostic
-to any particular neural network training program. Lightning includes loads of
-functionalities, but fundamentally you can think of Lightning as doing the
-training loop for you. You only have to write the training step, which is then
-called by Lightning.
+Lightning is built on pure PyTorch and requires your code to be written using a
+certain structure. It has a lot of functionality, but it attempts to streamline
+the training process to be agnostic to any particular neural network training
+program. Lightning includes loads of functionalities, but fundamentally you can
+think of Lightning as doing the training loop for you. You only have to write
+the training step, which is then called by Lightning.
 
 The benefit of the design of Lightning is that Lightning manages distributing
 your code across multiple gpus without you having to really change your code.
 
-#### Activate virtual environment before calling `srun`
-One caveat when using Lightning is that 
+### `torchrun`
 
-### torch.distributed.launch
-
-If you use the `torch.distributed.launch` approach you achieve full flexibility
-in how to manage the gpus for each process. Under the hood
-`torch.distributed.launch` spawns subprocesses, and requires you to specify
-which machine the "master" machine as well as which port these processes use to
-communicate to each other.
+If you use the `torchrun` approach you achieve full flexibility in how to manage
+the gpus for each process. Under the hood `torchrun` spawns subprocesses, and
+requires you to specify which machine the "master" machine as well as which port
+these processes use to communicate to each other.
 
 If you use a virtual environment for you application, the hpc scripts provided
-in this repo handles this for you. However, if you use Singularity you have to
-manage this yourself: either as a command passed to the Singularity container or
-build the Singularity container to take care of this.
+in this repository handles this for you. However, if you use Singularity you
+have to manage this yourself: either as a command passed to the Singularity
+container or build the Singularity container to take care of this.
 
-The [launch
-script](https://github.com/pytorch/pytorch/blob/master/torch/distributed/launch.py)
-comes with the installation of PyTorch, and should be executed on **each node**
-using the following pattern,
+[`torchrun`](https://pytorch.org/docs/stable/elastic/run.html) comes with the
+installation of PyTorch, and should be executed on **each node** using the
+following pattern,
 
 ``` bash
-python -m torch.distributed.launch --nproc_per_node=NUM_GPUS_YOU_HAVE
-               --nnodes=2 --node_rank=0 --master_addr="192.168.1.1"
-               --master_port=1234 YOUR_TRAINING_SCRIPT.py (--arg1 --arg2 --arg3
-               and all other arguments of your training script)
+torchrun --nproc_per_node 2 --nnodes 2 \
+    --rdzv_id=0 \
+    --rdzv_backend=c10d \
+    --rdzv_endpoint=192.168.1.1:2345 \
+    --max_restarts=3 \
+    YOUR_TRAINING_SCRIPT.py (--arg1 --arg2 --arg3 and all other arguments of your training script)
 ```
 
 See the
-[virtual_env_hpc_files/distributed_scripts/lightning_launcher.sh](virtual_env_hpc_files/distributed_scripts/lightning_launcher.sh)
+[virtual_env_hpc_files/distributed_scripts/lightning_launcher.sh](virtual_env_hpc_files/distributed_scripts/torchrun_launcher.sh)
 file for how this is handled if you use a virtual environment approach.
 
 ## Environment variables
@@ -443,7 +429,7 @@ found in `/scratch-ssd` that matches the pattern `${USER}*`.
 ## TODO
 - [ ] Support multi-node distributed GPU training for Singularity based jobs.
 
-[sweeper.yml]: (sweeper.yml)
-[Singularity readme]: (singularity_hpc_files/README.md)
-[virtual_environment readme]: (/virtual_env_hpc_files/README.md)
-[experiment_configurations.txt]: (experiment_configurations.txt)
+[sweeper.yml]: sweeper.yml
+[Singularity readme]: singularity_hpc_files/README.md
+[virtual environment readme]: virtual_env_hpc_files/README.md
+[experiment_configurations.txt]: experiment_configurations.txt

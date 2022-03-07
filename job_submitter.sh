@@ -1,16 +1,16 @@
-#!/bin/bash
+#!/bin/bas/bash
 
 # get parent of parent directory from where this script is called
 # (assumes submitted from source_dir/hpc_scripts)
 source_dir="$(dirname "$(pwd)")"
 project_name="$(echo ${source_dir} | awk -F/ '{print $NF}')"
-gpu_type="v100l"
+gpu_type=""
 time="00-01:00:00"
 cpus=2
-gpus=1
+gpus=0
 job_type="standard"
 num_nodes=1
-mem_per_gpu="10G"
+mem="10G"
 account='rrg-kevinlb'
 re='^[0-9]+$'
 singularity_job=false
@@ -47,9 +47,9 @@ while [[ $# -gt 0 ]]; do
       ;;
     -W|--which-distributed)
       which_distributed="$2"
-      allowed=("script" "lightning")
+      allowed=("torchrun" "lightning")
       if [[ ! " ${allowed[@]} " =~ " ${which_distributed} " ]]; then
-        echo "Supported distributed options: script or lightning " >&2; exit 1
+        echo "Supported distributed options: torchrun or lightning " >&2; exit 1
       fi
       shift 2
       ;;
@@ -57,14 +57,14 @@ while [[ $# -gt 0 ]]; do
       time="$2"
       shift 2
       ;;
-    -m|--mem-per-gpu)
-      mem_per_gpu="$2"
-      mem_type="${mem_per_gpu##*[0-9]}"
+    -m|--mem)
+      mem="$2"
+      mem_type="${mem##*[0-9]}"
       allowed=("G" "M")
       if [[ ! " ${allowed[@]} " =~ " ${mem_type} " ]]; then
         echo "Supported mnemory options: G or M " >&2; exit 1
       fi
-      mem_amount="${mem_per_gpu%%[a-zA-Z]*}"
+      mem_amount="${mem%%[a-zA-Z]*}"
       if  [[ ! $mem_amount =~ $re ]] || [[ $mem_amount < 0 ]]; then
         echo "Amount of memory must be integer and non-negative" >&2; exit 1
       fi
@@ -99,7 +99,7 @@ while [[ $# -gt 0 ]]; do
       ;;
     -d|--data)
       # https://tldp.org/LDP/abs/html/string-manipulation.html
-      stuff_to_tmp="$(echo "$@" | awk -F'--' '{print $2}')" # includes the argument flag itself
+      stuff_to_tmp="$(echo " $@" | awk -F' --| -' '{print $2}')" # includes the argument flag itself
       shift "$(echo "$stuff_to_tmp" | awk '{print NF}')"
       # remove argument flag
       stuff_to_tmp="$(cut -d ' ' -f2- <<< ${stuff_to_tmp} | sed 's/ *$//')"
@@ -123,7 +123,8 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     *)
-      unknown="$(echo "$@" | awk -F'--' '{print $2}')"
+      unknown="$(echo " $@" | awk -F' --| -' '{print $2}')"
+      echo "Unknown argument provided: ${unknown}"
       shift "$(echo "$unknown" | awk '{print NF}')"
       ;;
   esac
@@ -167,12 +168,11 @@ if [ ! -z "${SCRATCH}" ]; then
 
     # load the necessary modules, depend on your hpc env
     if [[ "$(hostname)" == *"cedar"* ]]; then
-      module load python/3.9 cuda
+      module load python/3.9 cuda/11.4
     fi
 
     if [ ! -d virtual_env ]; then
-
-      sbatch_virtualenv_cmd=(-W --account="${account}" \
+      sbatch_virtualenv_cmd=(-W \
         -o "${SCRATCH}/python_virtualenv_installer_output.out" \
         --job-name="virtualenv-creator" --mem="10G")
 
@@ -181,7 +181,6 @@ if [ ! -z "${SCRATCH}" ]; then
       elif [[ "$(hostname)" == *"cedar"* ]]; then
           sbatch_virtualenv_cmd+=(--account="${account}")
       fi
-
 
       # install python packages as a submitted job
       # use -W to wait for the job to finish
@@ -234,66 +233,6 @@ if [ ! -z "${SCRATCH}" ]; then
     else
       echo "Virtual environment already exists"
     fi
-
-
-    sbatch_virtualenv_cmd=(-W --account="${account}" \
-      -o "${SCRATCH}/python_virtualenv_installer_output.out" \
-      --job-name="virtualenv-creator" --mem="10G")
-
-    if [[ "$(hostname)" == *"borg"* ]]; then
-        sbatch_virtualenv_cmd+=(--partition="plai")
-    elif [[ "$(hostname)" == *"cedar"* ]]; then
-        sbatch_virtualenv_cmd+=(--account="${account}")
-    fi
-
-    # install python packages as a submitted job
-    # use -W to wait for the job to finish
-    echo "Submitting virtualenv installer job"
-    sbatch "${sbatch_virtualenv_cmd[@]}"  hpc_files/install_python_packages.sh &
-    virtualenv_process_id=$!
-    pending=0
-    runnning=0
-    submitted=0
-    while ps | grep "${virtualenv_process_id}" 1> /dev/null; do
-      job_query="$(squeue -u amunk | grep "virtualenv" | tr -s " " | sed 's/^ //')"
-      job_id="$(echo "$job_query" | cut -d ' ' -f 1)"
-      job_status="$(echo "$job_query" | cut -d ' ' -f 5)"
-
-      if [ ! -z "${job_id}" ]; then
-        case "$job_status" in
-          PD)
-            if (( pending == 0 )) ; then
-              echo "Job ${job_id} is pending"
-              pending=1
-            fi
-            ;;
-          R)
-            if (( running == 0 )) ; then
-              echo "Job ${job_id} is running and installing virtual environment"
-              running=1
-            fi
-            ;;
-          *)
-            echo "Status is neither R nor PD"
-        esac
-      else
-        if (( submitted == 0 )) ; then
-          echo "Job still being submitted"
-          submitted=1
-        fi
-      fi
-      sleep 2
-    done
-    # The variable $? always holds the exit code of the last command to finish.
-    # Here it holds the exit code of $my_pid, since wait exits with that code.
-    wait $virtualenv_process_id
-    virtualenv_job_status=$?
-    if (( virtualenv_job_status == 0 )); then
-      echo "Finished installing virtualenv"
-    else
-      echo "Failed to install virtualenv" >&2; exit 1
-    fi
-
     hpc_file_location="${source_dir}/hpc_files/virtual_env_hpc_files"
     args=("${tarball}")
   else
@@ -332,12 +271,12 @@ if [ ! -z "${SCRATCH}" ]; then
       -o "${SCRATCH}/${project_name}/hpc_outputs/standard_${exp_name}_%j.out")
   elif [[ ${job_type} == "distributed" ]]; then
     echo "About to submit a ditributed job of type \"${which_distributed}\""
-    sbatch_cmd=(-o "${SCRATCH}/${project_name}/hpc_outputs/${which_distributed}_${exp_name}_%j.out" \
+    sbatch_cmd=(-o "${SCRATCH}/${project_name}/hpc_outputs/${which_distributed}_${exp_name}_%N_%j.out" \
       --job-name="${which_distributed}_dist-${project_name}-${exp_name}")
     hpc_file_location="${hpc_file_location}/distributed_dispatcher.sh"
     if [[ ${which_distributed} == "lightning" ]]; then
       sbatch_cmd+=(--tasks-per-node=${gpus})
-    elif [[ ${which_distributed} == "script" ]]; then
+    elif [[ ${which_distributed} == "torchrun" ]]; then
       cpus=$((${cpus}*${gpus}))
       sbatch_cmd+=(--tasks-per-node=1)
     fi
@@ -345,7 +284,7 @@ if [ ! -z "${SCRATCH}" ]; then
 
   sbatch_cmd+=(--nodes="${num_nodes}" \
     --time="${time}" \
-    --mem-per-gpu="${mem_per_gpu}"\
+    --mem="${mem}"\
     --cpus-per-task="${cpus}")
 
   cmd=$(tr -d '\n\r\\' < "${exp_configs_path}")
@@ -356,16 +295,29 @@ if [ ! -z "${SCRATCH}" ]; then
   variables="scratch_dir=${scratch_dir},source_dir=${source_dir},\
 exp_name=${exp_name},WANDB_API_KEY=${WANDB_API_KEY},cmd=${cmd},\
 which_distributed=${which_distributed},\
-singularity_container=${singularity_container},LD_LIBRARY_PATH=/home/${USER}/.mujoco/mujoco200/bin"
+singularity_container=${singularity_container}"
+
+  if [[ $gpus > 0 ]]; then
+      if [[ -z ${gpu_type} ]] || [[ "$(hostname)" == *"borg" ]]; then
+        gres="--gres=gpu:${gpus}"
+      else
+        gres="--gres=gpu:${gpu_type}:${gpus}"
+      fi
+  else
+    gres=""
+  fi
+
 
   if [[ "$(hostname)" == *"borg"* ]]; then
-      sbatch_cmd+=(--partition="plai" --gpus-per-node="${gpus}")
+      export SCORE_SDE_PATH='/ubc/cs/research/fwood/amunk/useful-python-repos/score_sde_pytorch'
+      sbatch_cmd+=(--partition="plai")
       slurm_tmpdir="/scratch-ssd/${USER}"
       variables="${variables},SLURM_TMPDIR=${slurm_tmpdir}"
   elif [[ "$(hostname)" == *"cedar"* ]]; then
-      sbatch_cmd+=(--gpus-per-node="${gpu_type}:${gpus}" --account="${account}")
+      export SCORE_SDE_PATH='/project/def-fwood/amunk/useful-python-repos/score_sde_pytorch'
+      sbatch_cmd+=(--account="${account}")
   fi
-  sbatch_cmd+=(--export=ALL,"${variables}")
+  sbatch_cmd+=("${gres}" --export=ALL,"${variables}")
 
   function do_continue {
     echo "The following sbatch options will be set:"

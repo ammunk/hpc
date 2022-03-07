@@ -9,13 +9,13 @@ Submit a job based on the provided options
                                 (standard, sweep, distributed).
                                 Default: standard
 -W, --which-distributed       Kind of distributed gpu application backend used
-                                (lightning, script). Must be provided if using
+                                (lightning, torchrun). Must be provided if using
                                 "--job-type distributed"
 -t, --time                    Requested runtime. Format: dd-HH:MM:SS.
                                 Default: 00-01:00:00
--m, --mem-per-gpu             Amount of memory per requested gpu. E.g. 10G or 10M.
+-m, --mem                     Amount of memory per node. E.g. 10G or 10M.
                                 Default: 10G
--G, --gpu-type               Type of gpu to use (p100, p100l, v100l). Ignored on
+-G, --gpu-type                Type of gpu to use (p100, p100l, v100l). Ignored on
                                 the PLAI cluster. Default: v100l
 -e, --exp-name                Name of the experiment. Used to created convenient
                                 folders in ${SCRATCH}/${project_name} and to name
