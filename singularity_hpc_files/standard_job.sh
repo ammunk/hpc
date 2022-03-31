@@ -96,5 +96,5 @@ if [[ "${scratch_dir}" == *"scratch"* ]]; then
     fi
 
 else
-    echo "BASEDIR does not point to anywhere on **/scratch" >&2; exit 1
+    echo "scratch_dir does not point to anywhere on **/scratch" >&2; exit 1
 fi

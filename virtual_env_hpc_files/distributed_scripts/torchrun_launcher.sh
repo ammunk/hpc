@@ -5,7 +5,7 @@ master_addr=$3          # hostname for the master node
 master_port=$4          # master port
 tarball=$5              # tarball containing data etc to be moved to local node
 
-export NCCL_BLOCKING_WAIT=1  #Set this environment variable if you wish to use the NCCL backend for inter-GPU communication.
+export NCCL_ASYNC_ERROR_HANDLING=1
 nnodes=${SLURM_JOB_NUM_NODES}
 cmd_base="torchrun --nproc_per_node ${nproc_per_node}"
 cmd_base="${cmd_base} --nnodes ${nnodes}"

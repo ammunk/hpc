@@ -27,22 +27,21 @@ Depending on whether you use Singularity or a python virtual environment they
 each pose slightly different constraints on how experiments run once a job has
 been submitted. These constraints are minimal so that you do not have to give up
 e.g. Singularity's flexibility yet ensures the script can make some assumptions
-about how to run your experiments. These details on this can be found in the
+about how to run your experiments. The details on this can be found in the
 [Singularity readme] or the [virtual environment readme].
   
 To use these scripts, simply copy them into your **[appropriately
 structured](#project-structure)** project. The scripts are written to be
 (almost) project agnostic, which effectively means that the scripts will:
 
-- Automatically set up the experiments which prevents mixing different projects
-and their experiments.
+- Automatically set up the experiments which prevents mixing different projects.
 
 - Ensure the correct relationship between requested number of *gpus*, *nodes*,
 and *cpus per gpu* depending on the type of distributed job. 
 
 - [Manage the transfer](#copying-datasets-and-other-files-to-slurm_tmpdir) of
-user specified files and directories to and from the local nodes for faster
-read/write operations - i.e. using `SLURM_TMPDIR`.
+data and directories to and from local nodes for faster read/write operations -
+i.e. via the `SLURM_TMPDIR` environment variable.
 
 The created folders and their location are easily accessible as [environment
 variables](#environment-variables). One thing to pay attention to is that
@@ -51,22 +50,20 @@ environment based jobs. For details see the [created folders](#created-folders).
 
 #### Important:
 
-The scripts rely on the `SCRATCH` environment variable. This is **not** set by
-default on the PLAI machines. To use these scripts on the PLAI cluster, add
+The scripts rely on the `SCRATCH` environment variable. If `SCRATCH` is not set
+by default add
 
 ``` bash
-export SCRATCH=/ubc/cs/research/plai-scratch/${USER}
+export SCRATCH=[path to scratch]
 ```
 to your `~/.bashrc`.
 
 Additionally, you will notice references to the `SLURM_TMPDIR`. This variable
-points to a temporary directory created for each job. If the job is allocated
-multiple nodes the temporary directory is created on each node. These
-directories are already automized by Compute Canada on Cedar. However, this is
-not the case on the PLAI cluster, and so these scripts will instead mimic this
-behavior and subsequently remove these temporary directories upon job
-completion. Please refer to [PLAI `SLURM_TMPDIR`](#plai-slurm_tmpdir) for
-further details.
+points to a temporary directory created for each job pointing to a job-specific
+directory on each local node. If the job is allocated multiple nodes the
+temporary directory is unique on each node. Some clusters will have these
+automatically set. However, if this is not the case make sure to set this up
+yourself.
 
 ## Submitting jobs
 
@@ -127,7 +124,7 @@ The options that control the job submissions are:
 Assume we have a project with the [appropriate structure](#project-structure).
 
 
-To submit a job first `cd [path_to_project]/hpc_files`, and then
+To submit a job first `cd [path to project]/hpc_files`, and then
 
 ``` bash
 bash job_submitter.sh \
@@ -147,26 +144,26 @@ pip install wandb
 ```
 
 To use `wandb` requires a user login. Either do `wandb login`, where `wandb`
-will prompt for a username and password, or circumvent logging in by instead
-setting the `WANDB_API_KEY` environment variable to the api key provided by
-weight and biases after you sign up.
+will prompt for a username and password, or set the `WANDB_API_KEY` environment
+variable to the api key provided by weight and biases after you sign up.
 
 The scripts found here take the latter approach by searching for your api key in
 `~/wandb_credentials.txt`. As long as you copy your api key into
-`~/wandb_credentials.txt` on cedar and the PLAI cluster you can perform sweeps
-and your application can log experiment progress using `wandb`.
+`~/wandb_credentials.txt` your applications can log experiment progress using
+`wandb`.
 
 #### Sweeper jobs
 
 When you submit a `wandb` sweep array job, you only need to specify the sweep
-id. That is, first initiate the sweep (either locally or one of the cluster),
+id. That is, first initiate the sweep (either locally or on your favorite
+cluster),
 
 ``` bash
 wandb sweep sweeper.yml
 ```
 
 This will create a pending sweep on `wandb`'s servers. Then in
-`project_root/hpc_files` do
+`project root/hpc_files` do
 
 ``` bash
 bash job_submitter.sh --job_type sweep [other options]
@@ -177,7 +174,7 @@ The script will then prompt for the sweep id and the number of sweeps.
 The provided [sweeper.yml] file can serve as a template, but should be
 modified to your specific sweep. Think of the [sweeper.yml] file as the
 sweep's equivalent of the more general
-[experiment_configuration.txt] file.
+[experiment_configurations.txt] file.
 
 ### How to specify experiment configurations:
 
@@ -192,10 +189,10 @@ To copy data to the local nodes when submitting a job, simply use the `-d,
 whitespace separated list of **relative** paths.
 
 The main purpose of this functionality is to copy large amounts of data, which
-typically is stored on `${SCRTACH}`. Therefore, the paths are going to be
+typically is stored on `SCRTACH`. Therefore, the paths are going to be
 relative to `${SCRATCH}/${project_name}`. The script will then create a tarball
-using `tar` and transfer the files and directories to `${SLURM_TMPDIR}`. You can
-then access the files and directories on `${SLURM_TMPDIR}` using the same paths
+using `tar` and transfer the files and directories to `SLURM_TMPDIR`. You can
+then access the files and directories at `SLURM_TMPDIR` using the same paths
 used when using the `-d, --data` option.
 
 If a tarball already exists, no new tarball is created. If you want to update
@@ -249,9 +246,9 @@ ${SLURM_TMPDIR}
 │   └── dataset2
 ```
 
-In your specific experiment, you could then have an option to specify the
-location of a dataset (using e.g. python's `argparse`). You could then configure
-to look for `dataset1` by doing
+In your specific experiment, you would have an option to specify the location of
+a dataset (using e.g. python's `argparse`). You could then configure your
+program to look for `dataset1` by running
 
 ``` bash
 python my_program.py --data_dir=${SLURM_TMPDIR}/datasets/dataset1 [other arguments]
@@ -274,9 +271,9 @@ In terms of writing the application code, Lightning removes a lot of the
 distributed training setup and does this for you. It also offers multiple
 optimization tricks that have been found to improve training of neural network
 based models. The downside is that Lightning is (slightly) more rigid in terms
-of managing the gpus across the distributed processes. Using PyTorch's launch
-script offers full flexibility, but requires manually setting up the distributed
-training.
+of managing the gpus across the distributed processes. Using PyTorch's
+`torchrun` offers full flexibility, but requires manually setting up the
+distributed training.
 
 To get comfortable with these different approaches and play around with them
 check out my [distributed training
@@ -285,7 +282,7 @@ uses the hpc scripts found here.
 
 ### Lightning
 
-Lightning is built on pure PyTorch and requires your code to be written using a
+Lightning is built on PyTorch and requires your code to be written using a
 certain structure. It has a lot of functionality, but it attempts to streamline
 the training process to be agnostic to any particular neural network training
 program. Lightning includes loads of functionalities, but fundamentally you can
@@ -299,8 +296,8 @@ your code across multiple gpus without you having to really change your code.
 
 If you use the `torchrun` approach you achieve full flexibility in how to manage
 the gpus for each process. Under the hood `torchrun` spawns subprocesses, and
-requires you to specify which machine the "master" machine as well as which port
-these processes use to communicate to each other.
+requires you to specify which machine the is the "master" machine as well as
+which port these processes use to communicate to each other.
 
 If you use a virtual environment for you application, the hpc scripts provided
 in this repository handles this for you. However, if you use Singularity you
@@ -309,7 +306,7 @@ container or build the Singularity container to take care of this.
 
 [`torchrun`](https://pytorch.org/docs/stable/elastic/run.html) comes with the
 installation of PyTorch, and should be executed on **each node** using the
-following pattern,
+following execution pattern,
 
 ``` bash
 torchrun --nproc_per_node 2 --nnodes 2 \
@@ -321,17 +318,17 @@ torchrun --nproc_per_node 2 --nnodes 2 \
 ```
 
 See the
-[virtual_env_hpc_files/distributed_scripts/lightning_launcher.sh](virtual_env_hpc_files/distributed_scripts/torchrun_launcher.sh)
+[virtual_env_hpc_files/distributed_scripts/torchrun_launcher.sh](virtual_env_hpc_files/distributed_scripts/torchrun_launcher.sh)
 file for how this is handled if you use a virtual environment approach.
 
 ## Environment variables
 
-The scripts assign following environment variables which. These are used
-internally, and are also meant to be used downstream within a program.
+The scripts sets various environment variables. These are used
+internally, and can be used downstream within a program.
 
 Some are automatically inferred from the name of the project folder, while other
-should be manually (optional) specified. The variables are then available
-within your program using e.g. python's `os` package:
+should be manually (optional) specified. The variables are then available within
+your program using e.g. python's `os` package:
 
 ``` python
 import os
@@ -350,13 +347,13 @@ source_dir = os.environ['source_dir']
     large files - e.g. model checkpoints etc.
   - Since this is on `SCRATCH` read/write operation may be **slow**. Try
     using `path_to_local_node_storage=${SLURM_TMPDIR}` instead.
-  - For project using **datasets**, place these somewhere here.
 
 ### Manually (optional) assigned
 - `exp_name`: a name which describe the current experiment belonging to the
   overarching project (`project_name`)
-  - For instance, the project could be "gan_training". An experiment could
-    then be `exp_name=celebA` for training a GAN to generate images of faces.
+  - For instance, the project could be "gan_training". An experiment could then
+    be `exp_name=celebA` for training a GAN using the [celebA
+    dataset](https://mmlab.ie.cuhk.edu.hk/projects/CelebA.html)
 
 ## Created folders
 
@@ -368,7 +365,7 @@ exist.
 - `${SCRATCH}/${project_name}`: if you have a dataset on scratch, you should
   create this directory yourself and put whatever data you need for your jobs
   here.
-- `${scratch_dir}/hpc_outputs`: location of yours jobs' output files
+- `${scratch_dir}/hpc_outputs`: location of yours jobs' output files.
 - `${scratch_dir}/exp_name/checkpoints`: a directory meant to store checkpoints
   and other files created as your experiment runs.
 
@@ -404,20 +401,20 @@ your_project_name
 ├── Singularity.bld
 │ 
 .
-. project source files
+. other project source files
 .
 ```
 
-## PLAI `SLURM_TMPDIR`
+## EXAMPLE: `SLURM_TMPDIR` on PLAI's cluster
 
-The `SLURM_TMPDIR` not provided on the PLAI cluster (but is on cedar). This is
-why the scripts will check if you submit your job on the PLAI cluster and set
-this for you - `SLURM_TMPDIR=/scratch-ssd/${USER}`.
+The `SLURM_TMPDIR` not provided on the PLAI cluster. This is why the scripts
+will check if you submit your job on the PLAI cluster and set this for you -
+`SLURM_TMPDIR=/scratch-ssd/${USER}`.
 
 The scripts will then create the temporary directory for each job on each node.
-Upon completion of the job the directory will be deleted. Bear in mind, however,
-that should the job end prematurely due to hitting the time limit or the job
-simply crashed, the cleanup will not happen.
+Upon completion of the job the directory will be deleted. Note, however, that
+should the job end prematurely due to hitting the time limit or the job simply
+crashes, the cleanup will not happen.
 
 ### Keeping PLAI local storage clean
 
@@ -426,8 +423,16 @@ To keep the local storages clean on the PLAI cluster, consider running the
 job to each machine on the plai cluster and removes all directories and files
 found in `/scratch-ssd` that matches the pattern `${USER}*`.
 
-## TODO
-- [ ] Support multi-node distributed GPU training for Singularity based jobs.
+## Additional resources
+
+- PyTorch [distributed communication package](https://pytorch.org/docs/stable/distributed.html#torch.distributed.init_process_group) 
+  - [Elastic launch](https://pytorch.org/docs/stable/elastic/run.html)
+  - [PyTorch distributed tutorial](https://pytorch.org/tutorials/intermediate/ddp_tutorial.html?highlight=distributed)
+- [PyTorch Lightning](https://pytorch-lightning.readthedocs.io/en/stable/clouds/cluster.html)
+- Difference between using `--gres` (e.g. `--gres:gpu:2`) and `--gpus-per-task`:
+  (https://stackoverflow.com/questions/67091056/gpu-allocation-in-slurm-gres-vs-gpus-per-task-and-mpirun-vs-srun)
+  - Particularly be careful with `--gpu-per-task`
+  
 
 [sweeper.yml]: sweeper.yml
 [Singularity readme]: singularity_hpc_files/README.md

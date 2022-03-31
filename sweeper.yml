@@ -4,13 +4,20 @@ metric:
     name: generator_loss
 parameters:
     gen_lr:
-        values: [0.0005, 0.0001]
+        values: 
+        -0.0005
+        -0.0001
     adv_lr:
-        values: [0.0005, 0.0001]
+        values:
+        -0.0005
+        -0.0001
     train_gan_every:
-        values: [1, 5]
+        values:
+        -1
+        -5
     batch_size:
-        values: [32]
+        values: 
+        -1
 command:
     - python
     - -m
@@ -21,7 +28,7 @@ command:
     - --log_every
     - 100
     - --checkpoint_dir
-    - ${BASEDIR}/checkpoints
+    - ${scratch_dir}/checkpoints
     - --visualize_every
     - 500
     - --num_workers

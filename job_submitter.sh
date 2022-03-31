@@ -13,7 +13,9 @@ num_nodes=1
 mem="10G"
 account='rrg-kevinlb'
 re='^[0-9]+$'
+partition="plai"
 singularity_job=false
+partition="plai"
 exp_configs_path="${source_dir}/hpc_files/experiment_configurations.txt"
 hpc_files_dir="$(pwd)"
 while [[ $# -gt 0 ]]; do
@@ -50,6 +52,14 @@ while [[ $# -gt 0 ]]; do
       allowed=("torchrun" "lightning")
       if [[ ! " ${allowed[@]} " =~ " ${which_distributed} " ]]; then
         echo "Supported distributed options: torchrun or lightning " >&2; exit 1
+      fi
+      shift 2
+      ;;
+    -p|--partition)
+      parition="$2"
+      allowed=("plai" "plai_towers")
+      if [[ ! " ${allowed[@]} " =~ " ${parition} " ]]; then
+        echo "Supported partition: plai or plai_towers " >&2; exit 1
       fi
       shift 2
       ;;
@@ -90,7 +100,7 @@ while [[ $# -gt 0 ]]; do
         echo "Error: supported job types: standard distributed sweep " >&2; exit 1
       fi
       ;;
-    -n|--num-nodes)
+    -N|--nodes)
       num_nodes="$2"
       if  [[ ! $num_nodes =~ $re ]] || [[ $num_nodes -le 0 ]]; then
         echo "num_nodes must be integer and bigger than 0" >&2; exit 1
@@ -174,10 +184,10 @@ if [ ! -z "${SCRATCH}" ]; then
     if [ ! -d virtual_env ]; then
       sbatch_virtualenv_cmd=(-W \
         -o "${SCRATCH}/python_virtualenv_installer_output.out" \
-        --job-name="virtualenv-creator" --mem="10G")
+        --job-name="virtualenv-creator" --mem="10G" -n1 -N1)
 
       if [[ "$(hostname)" == *"borg"* ]]; then
-          sbatch_virtualenv_cmd+=(--partition="plai")
+          sbatch_virtualenv_cmd+=(--partition="${partition}")
       elif [[ "$(hostname)" == *"cedar"* ]]; then
           sbatch_virtualenv_cmd+=(--account="${account}")
       fi
@@ -259,14 +269,14 @@ if [ ! -z "${SCRATCH}" ]; then
     elif [[ "$(hostname)" == *"cedar"* ]]; then
       sbatch_cmd=(--array 1-${n_sweeps})
     fi
-    sbatch_cmd+=(--tasks-per-node=1 \
+    sbatch_cmd+=(--ntasks-per-node=1 \
       --job-name="sweep-${project_name}-${exp_name}" \
       -o "${SCRATCH}/${project_name}/hpc_outputs/sweep_${exp_name}_%A_%a.out")
   elif [[ ${job_type} == "standard" ]]; then
     echo "About to submit a standard job. Setting num_nodes=1"
     num_nodes=1
     hpc_file_location="${hpc_file_location}/standard_job.sh"
-    sbatch_cmd=(--tasks-per-node=1 \
+    sbatch_cmd=(--ntasks-per-node=1 \
       --job-name="standard-${project_name}-${exp_name}" \
       -o "${SCRATCH}/${project_name}/hpc_outputs/standard_${exp_name}_%j.out")
   elif [[ ${job_type} == "distributed" ]]; then
@@ -275,10 +285,10 @@ if [ ! -z "${SCRATCH}" ]; then
       --job-name="${which_distributed}_dist-${project_name}-${exp_name}")
     hpc_file_location="${hpc_file_location}/distributed_dispatcher.sh"
     if [[ ${which_distributed} == "lightning" ]]; then
-      sbatch_cmd+=(--tasks-per-node=${gpus})
+      sbatch_cmd+=(--ntasks-per-node=${gpus})
     elif [[ ${which_distributed} == "torchrun" ]]; then
       cpus=$((${cpus}*${gpus}))
-      sbatch_cmd+=(--tasks-per-node=1)
+      sbatch_cmd+=(--ntasks-per-node=1)
     fi
   fi
 
@@ -309,12 +319,10 @@ singularity_container=${singularity_container}"
 
 
   if [[ "$(hostname)" == *"borg"* ]]; then
-      export SCORE_SDE_PATH='/ubc/cs/research/fwood/amunk/useful-python-repos/score_sde_pytorch'
-      sbatch_cmd+=(--partition="plai")
+      sbatch_cmd+=(--partition="${partition}")
       slurm_tmpdir="/scratch-ssd/${USER}"
       variables="${variables},SLURM_TMPDIR=${slurm_tmpdir}"
   elif [[ "$(hostname)" == *"cedar"* ]]; then
-      export SCORE_SDE_PATH='/project/def-fwood/amunk/useful-python-repos/score_sde_pytorch'
       sbatch_cmd+=(--account="${account}")
   fi
   sbatch_cmd+=("${gres}" --export=ALL,"${variables}")

@@ -11,7 +11,7 @@ if [[ ! ${program} == "python"* ]]; then
 fi
 cmds="$(cut -d ' ' -f2- <<< "${cmd}" | sed -r -e 's/ .*num_nodes.* [0-9]+ / /g' -r -e 's/ .*gpus.* [0-9]+ / /g')"
 cmds="$(sed -r -e 's/ .*num_nodes.* [0-9]+//g' -r -e 's/ .*gpus.* [0-9]+//g' <<< "${cmds}")"
-cmd="python ${cmds} --num_nodes=${nnodes} --gpus=${nproc_per_node}"
+cmd="python ${cmds} --nnodes=${nnodes} --gpus=${nproc_per_node}"
 echo "COMMANDS GIVEN: ${cmd[@]}"
 IFS=', ' read -r -a cmd <<< "${cmd}"
 # create plai machine temporary directory

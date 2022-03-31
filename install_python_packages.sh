@@ -1,7 +1,16 @@
 #!/bin/bash
 
-# setup virtual environment
-virtualenv --no-download virtual_env
+########## NOTE ###########
+
+# YOU MUST ENSURE THE RIGHT PIP/PYTHON VERSION IS USED. I.E. that the python cmd
+# points to the correct version. THESE SCRIPTS HAVE BEEN TESTED WITH PYTHON3.9
+
+###########################
+
+# setup virtual environment (we explicitly set the python executable to be the
+# located whereever the current python executable is located - otherwise
+# virtualenv defaults to python2 if available)
+virtualenv --python=python --no-download virtual_env # you want to use a different environment creator
 source virtual_env/bin/activate
 pip install --no-index --upgrade pip
 
